@@ -89,11 +89,6 @@ Uygulama, temiz ve sürdürülebilir bir mimari üzerine inşa edilmiştir:
 
 Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasını inceleyebilirsiniz.
 
-## 👥 Ekip
-
-- **Tasarım & Geliştirme**: [Ekip üyeleri]
-- **Test & Dokümantasyon**: [Ekip üyeleri]
-
 ## 🌟 Tanıtım
 
 Ev Temizlik Asistanı, ev temizliğini sıkıcı bir görev olmaktan çıkarıp, eğlenceli ve motive edici bir deneyime dönüştürür. Kullanıcı dostu arayüzü, akıllı görev yönetimi ve ödül sistemi ile ev temizliğine yepyeni bir boyut kazandırır.
