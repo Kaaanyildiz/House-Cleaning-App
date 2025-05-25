@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:house_cleaning/constants/app_theme.dart';
+import 'package:provider/provider.dart'; 
+import 'package:house_cleaning/services/user_provider.dart'; 
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:house_cleaning/screens/profile_page.dart'; // Sadece ProfilePage'i içe aktar
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -25,6 +29,36 @@ class _SettingsPageState extends State<SettingsPage> {
     Colors.teal,
   ];
 
+  @override  void initState() {
+    super.initState();
+    
+    // Hive'dan açılış ayarlarını yükle
+    _loadSettings();
+  }
+  
+  // Mevcut ayarları yükle
+  void _loadSettings() async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    
+    // Tema ayarlarını yükle
+    _isDarkMode = AppTheme.instance.isDark;
+    
+    // Mevcut renk temasını bul
+    final currentTheme = AppTheme.instance.currentThemeOption;
+    _selectedColorIndex = AppTheme.themeOptions.indexWhere(
+      (option) => option.primary == currentTheme.primary
+    );
+    if (_selectedColorIndex < 0) _selectedColorIndex = 0;
+    
+    // Bildirim ayarlarını yükle
+    final settingsBox = await Hive.openBox('settings');
+    _notificationsEnabled = settingsBox.get('notificationsEnabled', defaultValue: true);
+    _soundEffectsEnabled = settingsBox.get('soundEffectsEnabled', defaultValue: true);
+    
+    setState(() {});
+  }
+  // Not: Bu metod artık doğrudan kullanılmıyor, saveSettings için Provider kullanılıyor
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,8 +71,7 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 16),
           
           // Tema Ayarları
-          _buildSectionHeader('Tema Ayarları'),
-          _buildSettingSwitch(
+          _buildSectionHeader('Tema Ayarları'),          _buildSettingSwitch(
             title: 'Karanlık Mod',
             subtitle: 'Uygulamayı koyu renk temasıyla görüntüle',
             value: _isDarkMode,
@@ -46,7 +79,9 @@ class _SettingsPageState extends State<SettingsPage> {
               setState(() {
                 _isDarkMode = value;
               });
-              // Tema değiştirme fonksiyonu burada çağrılacak
+              // Tema değiştirme fonksiyonunu çağır
+              final userProvider = Provider.of<UserProvider>(context, listen: false);
+              userProvider.saveSettings({'isDarkMode': value});
             },
           ),
           _buildColorSelector(),
@@ -63,9 +98,12 @@ class _SettingsPageState extends State<SettingsPage> {
               setState(() {
                 _notificationsEnabled = value;
               });
+              
+              // Bildirim ayarlarını kaydet
+              final userProvider = Provider.of<UserProvider>(context, listen: false);
+              userProvider.saveNotificationSettings(notificationsEnabled: value);
             },
-          ),
-          _buildSettingSwitch(
+          ),          _buildSettingSwitch(
             title: 'Ses Efektleri',
             subtitle: 'Görev tamamlama ve rozet kazanma sesi',
             value: _soundEffectsEnabled,
@@ -73,6 +111,12 @@ class _SettingsPageState extends State<SettingsPage> {
               setState(() {
                 _soundEffectsEnabled = value;
               });
+              
+              // Ses ayarlarını kaydet
+              final userProvider = Provider.of<UserProvider>(context, listen: false);              userProvider.saveNotificationSettings(
+                notificationsEnabled: _notificationsEnabled,
+                soundEnabled: value
+              );
             },
           ),
           ListTile(
@@ -107,7 +151,10 @@ class _SettingsPageState extends State<SettingsPage> {
             title: const Text('Profil Bilgileri'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              // Profil sayfasına git
+              // Profil sayfasına yönlendir
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ProfilePage()),
+              );
             },
           ),
           ListTile(
@@ -203,7 +250,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   setState(() {
                     _selectedColorIndex = index;
                   });
-                  // Tema rengi değiştirme fonksiyonu çağrılacak
+                  // Tema rengi değiştirme fonksiyonu çağır
+                  final userProvider = Provider.of<UserProvider>(context, listen: false);
+                  userProvider.saveSettings({'themeIndex': index});
                 },
                 child: Container(
                   width: 40,
@@ -267,6 +316,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showReminderDialog() {
+    // Mevcut ayarı al
+    String reminderFrequency = Provider.of<UserProvider>(context, listen: false)
+        .reminderFrequency;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -276,41 +329,69 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             ListTile(
               title: const Text('Her saat'),
-              leading: Radio<int>(
-                value: 1,
-                groupValue: 0,
+              leading: Radio<String>(
+                value: 'hourly',
+                groupValue: reminderFrequency,
                 onChanged: (value) {
-                  Navigator.pop(context);
+                  if (value != null) {
+                    Provider.of<UserProvider>(context, listen: false)
+                        .saveNotificationSettings(
+                      notificationsEnabled: _notificationsEnabled,
+                      reminderFrequency: value,
+                    );
+                    Navigator.pop(context);
+                  }
                 },
               ),
             ),
             ListTile(
               title: const Text('Günde 3 kez'),
-              leading: Radio<int>(
-                value: 2,
-                groupValue: 0,
+              leading: Radio<String>(
+                value: 'frequent',
+                groupValue: reminderFrequency,
                 onChanged: (value) {
-                  Navigator.pop(context);
+                  if (value != null) {
+                    Provider.of<UserProvider>(context, listen: false)
+                        .saveNotificationSettings(
+                      notificationsEnabled: _notificationsEnabled,
+                      reminderFrequency: value,
+                    );
+                    Navigator.pop(context);
+                  }
                 },
               ),
             ),
             ListTile(
               title: const Text('Günde 1 kez'),
-              leading: Radio<int>(
-                value: 3,
-                groupValue: 0,
+              leading: Radio<String>(
+                value: 'daily',
+                groupValue: reminderFrequency,
                 onChanged: (value) {
-                  Navigator.pop(context);
+                  if (value != null) {
+                    Provider.of<UserProvider>(context, listen: false)
+                        .saveNotificationSettings(
+                      notificationsEnabled: _notificationsEnabled,
+                      reminderFrequency: value,
+                    );
+                    Navigator.pop(context);
+                  }
                 },
               ),
             ),
             ListTile(
               title: const Text('Sadece önemli görevler'),
-              leading: Radio<int>(
-                value: 4,
-                groupValue: 0,
+              leading: Radio<String>(
+                value: 'important_only',
+                groupValue: reminderFrequency,
                 onChanged: (value) {
-                  Navigator.pop(context);
+                  if (value != null) {
+                    Provider.of<UserProvider>(context, listen: false)
+                        .saveNotificationSettings(
+                      notificationsEnabled: _notificationsEnabled,
+                      reminderFrequency: value,
+                    );
+                    Navigator.pop(context);
+                  }
                 },
               ),
             ),

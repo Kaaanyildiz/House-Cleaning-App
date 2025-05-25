@@ -13,39 +13,218 @@ class StatisticsPage extends StatefulWidget {
   State<StatisticsPage> createState() => _StatisticsPageState();
 }
 
-class _StatisticsPageState extends State<StatisticsPage> {
-  // İstatistik verileri (örnek)
-  final Map<String, double> _categoryDistribution = {
-    'Mutfak': 30,
-    'Banyo': 20,
-    'Genel': 40,
-    'Özel': 10,
+class _StatisticsPageState extends State<StatisticsPage> {  // İstatistik verileri
+  // Varsayılan değerlerle başlatıyoruz, böylece late error olmaz
+  Map<String, double> _categoryDistribution = {
+    'Mutfak': 25, 
+    'Banyo': 25, 
+    'Genel': 25, 
+    'Özel': 25
   };
-
-  final Map<String, int> _completedTasksByDay = {
-    'Pazartesi': 3,
-    'Salı': 2,
-    'Çarşamba': 4,
-    'Perşembe': 1,
-    'Cuma': 2,
-    'Cumartesi': 5,
+  Map<String, int> _completedTasksByDay = {
+    'Pazartesi': 0,
+    'Salı': 0,
+    'Çarşamba': 0,
+    'Perşembe': 0,
+    'Cuma': 0,
+    'Cumartesi': 0,
     'Pazar': 0,
   };
-
-  final int _totalCompletedTasks = 17;
-  final int _streakDays = 5;
-  final int _totalPoints = 250;
-  final double _averageTimePerDay = 45.0; // dakika olarak  @override
+  int _totalCompletedTasks = 0;
+  int _streakDays = 0;
+  int _totalPoints = 0;
+  double _averageTimePerDay = 0.0; // dakika olarak
+  bool _isLoading = true;
+  
+  @override
+  void initState() {
+    super.initState();
+    // Hemen çağırıyoruz, postFrameCallback'e gerek yok
+    _loadStatistics();
+  }
+    // İstatistikleri yükle
+  void _loadStatistics() {
+    // İlk başta yükleme durumunu true yapıyoruz
+    setState(() {
+      _isLoading = true;
+    });
+    
+    // Provider mevcut değilse erken çıkış yap
+    if (!mounted) return;
+    
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      
+      // Kategori dağılımını hesapla
+      _categoryDistribution = _calculateCategoryDistribution(userProvider);
+      
+      // Günlere göre tamamlanan görevleri hesapla
+      _completedTasksByDay = _calculateCompletedTasksByDay(userProvider);
+      
+      // Toplam tamamlanan görev sayısı
+      _totalCompletedTasks = userProvider.currentUser.totalCompletedTasks;
+      
+      // Mevcut seri (gün sayısı)
+      _streakDays = userProvider.currentStreak;
+      
+      // Toplam puanlar
+      _totalPoints = userProvider.currentUser.points;
+      
+      // Ortalama günlük süre
+      _averageTimePerDay = _calculateAverageTimePerDay(userProvider);
+    } catch (e) {
+      // Hata durumunda varsayılan değerleri koruyoruz ve hata mesajı gösterilebilir
+      print('İstatistik yüklenirken hata: $e');
+    } finally {
+      // Mounted kontrolü yaparak güvenli bir şekilde setState çağırıyoruz
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+  
+  // Kategori dağılımını hesapla
+  Map<String, double> _calculateCategoryDistribution(UserProvider userProvider) {
+    final Map<TaskCategory, int> categoryCounts = {
+      TaskCategory.kitchen: 0,
+      TaskCategory.bathroom: 0,
+      TaskCategory.general: 0,
+      TaskCategory.special: 0,
+    };
+    
+    int totalTasks = 0;
+    
+    // Tamamlanan görevleri kategorilere göre say
+    for (var tasksOfDay in userProvider.currentUser.completedTasks.values) {
+      for (var taskId in tasksOfDay) {
+        final task = userProvider.allTasks.firstWhere(
+          (t) => t.id == taskId,
+          orElse: () => userProvider.allTasks.first,
+        );
+        
+        categoryCounts[task.category] = (categoryCounts[task.category] ?? 0) + 1;
+        totalTasks++;
+      }
+    }
+    
+    // Yüzdelikleri hesapla
+    final Map<String, double> distribution = {};
+    if (totalTasks > 0) {
+      distribution['Mutfak'] = (categoryCounts[TaskCategory.kitchen] ?? 0) * 100 / totalTasks;
+      distribution['Banyo'] = (categoryCounts[TaskCategory.bathroom] ?? 0) * 100 / totalTasks;
+      distribution['Genel'] = (categoryCounts[TaskCategory.general] ?? 0) * 100 / totalTasks;
+      distribution['Özel'] = (categoryCounts[TaskCategory.special] ?? 0) * 100 / totalTasks;
+    } else {
+      // Görev yoksa eşit dağıtım
+      distribution['Mutfak'] = 25;
+      distribution['Banyo'] = 25;
+      distribution['Genel'] = 25;
+      distribution['Özel'] = 25;
+    }
+    
+    return distribution;
+  }
+  
+  // Günlere göre tamamlanan görev sayısını hesapla
+  Map<String, int> _calculateCompletedTasksByDay(UserProvider userProvider) {
+    final Map<String, int> tasksByDay = {
+      'Pazartesi': 0,
+      'Salı': 0,
+      'Çarşamba': 0,
+      'Perşembe': 0,
+      'Cuma': 0,
+      'Cumartesi': 0,
+      'Pazar': 0,
+    };
+    
+    // Son 7 gün için görevleri say
+    final now = DateTime.now();
+    for (int i = 6; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      final taskList = userProvider.currentUser.completedTasks[date] ?? [];
+      
+      // Haftanın günü (1=Pazartesi, 7=Pazar)
+      int weekday = date.weekday;
+      
+      // Günlere göre say
+      switch (weekday) {
+        case 1:
+          tasksByDay['Pazartesi'] = (tasksByDay['Pazartesi'] ?? 0) + taskList.length;
+          break;
+        case 2:
+          tasksByDay['Salı'] = (tasksByDay['Salı'] ?? 0) + taskList.length;
+          break;
+        case 3:
+          tasksByDay['Çarşamba'] = (tasksByDay['Çarşamba'] ?? 0) + taskList.length;
+          break;
+        case 4:
+          tasksByDay['Perşembe'] = (tasksByDay['Perşembe'] ?? 0) + taskList.length;
+          break;
+        case 5:
+          tasksByDay['Cuma'] = (tasksByDay['Cuma'] ?? 0) + taskList.length;
+          break;
+        case 6:
+          tasksByDay['Cumartesi'] = (tasksByDay['Cumartesi'] ?? 0) + taskList.length;
+          break;
+        case 7:
+          tasksByDay['Pazar'] = (tasksByDay['Pazar'] ?? 0) + taskList.length;
+          break;
+      }
+    }
+    
+    return tasksByDay;
+  }
+  
+  // Ortalama günlük süreyi hesapla (dakika)
+  double _calculateAverageTimePerDay(UserProvider userProvider) {
+    int totalMinutes = 0;
+    int totalDaysWithTasks = 0;
+    
+    // Tüm tamamlanan görevleri dolaş
+    for (var entry in userProvider.currentUser.completedTasks.entries) {
+      if (entry.value.isNotEmpty) {
+        int minutesForDay = 0;
+        
+        // Bu gün için tamamlanan tüm görevleri say
+        for (var taskId in entry.value) {
+          final task = userProvider.allTasks.firstWhere(
+            (t) => t.id == taskId,
+            orElse: () => userProvider.allTasks.isNotEmpty 
+              ? userProvider.allTasks.first 
+              : Task(
+                  id: '0',
+                  title: 'Boş Görev',
+                  description: '',
+                  category: TaskCategory.general,
+                  difficulty: TaskDifficulty.easy,
+                  iconCode: Icons.help.codePoint,
+                  estimatedMinutes: 0,
+                ),
+          );
+          
+          minutesForDay += task.estimatedMinutes;
+        }
+        
+        totalMinutes += minutesForDay;
+        totalDaysWithTasks++;
+      }
+    }
+    
+    // Ortalamayı hesapla
+    return totalDaysWithTasks > 0 ? totalMinutes / totalDaysWithTasks : 0;
+  }  @override
   Widget build(BuildContext context) {
     return Consumer<UserProvider>(
       builder: (context, userProvider, child) {
-        if (!userProvider.isLoaded) {
-          return const Center(
-            child: CircularProgressIndicator(),
+        if (!userProvider.isLoaded || _isLoading) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
           );
         }
-
-        final user = userProvider.currentUser;
 
         return Scaffold(
           appBar: AppBar(

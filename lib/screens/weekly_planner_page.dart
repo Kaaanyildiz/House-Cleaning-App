@@ -22,27 +22,28 @@ class _WeeklyPlannerPageState extends State<WeeklyPlannerPage> {
     'Cumartesi',
     'Pazar',
   ];
-
   // Şimdiki tarih ve seçili gün
   late DateTime _selectedDate;
   int _selectedDayIndex = 0;
-
-  // Test verisi: Günlere göre görev sayısı
-  final Map<int, int> _taskCountByDay = {
-    0: 3, // Pazartesi
-    1: 2, // Salı
-    2: 4, // Çarşamba
-    3: 1, // Perşembe
-    4: 2, // Cuma
-    5: 5, // Cumartesi
-    6: 0, // Pazar
-  };
-
+  
+  // Günlere göre görev sayısı
+  Map<int, int> _taskCountByDay = {};
   @override
   void initState() {
     super.initState();
     _selectedDate = _getStartOfWeek(DateTime.now());
     _selectedDayIndex = DateTime.now().weekday - 1; // 0=Pazartesi, 6=Pazar
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateTaskCounts();
+    });
+  }
+  
+  // Görev sayılarını güncelle
+  void _updateTaskCounts() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    setState(() {
+      _taskCountByDay = userProvider.getTaskCountByWeekday(_selectedDate);
+    });
   }
 
   // Haftanın başlangıç gününü döndürür (Pazartesi)
@@ -251,14 +252,13 @@ class _WeeklyPlannerPageState extends State<WeeklyPlannerPage> {
       default:
         return '';
     }
-  }
-  Widget _buildTaskList() {
-    // Provider'dan görevleri al - Şimdilik _taskCountByDay ile devam ediyoruz
-    // İlerleyen adımlarda provider entegrasyonu tamamlanacak
+  }  Widget _buildTaskList() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final selectedDay = _selectedDate.add(Duration(days: _selectedDayIndex));
+    final tasksForSelectedDay = userProvider.getTasksForDate(selectedDay);
     
     // Seçili günde görev yoksa
-    if (_taskCountByDay[_selectedDayIndex] == null ||
-        _taskCountByDay[_selectedDayIndex] == 0) {
+    if (tasksForSelectedDay.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -293,43 +293,24 @@ class _WeeklyPlannerPageState extends State<WeeklyPlannerPage> {
           ],
         ),
       );
-    }
-
-    // Seçili gün için görevler (örnek veri)
+    }    // Seçili gün için görevler (gerçek veri)
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _taskCountByDay[_selectedDayIndex],
+      itemCount: tasksForSelectedDay.length,
       itemBuilder: (context, index) {
-        // Her gün için örnek görev verileri oluştur
-        String title = 'Görev ${index + 1}';
-        String time = '${9 + index}:00';
-        IconData icon = Icons.cleaning_services;
-
-        if (_selectedDayIndex == 0) {
-          if (index == 0) {
-            title = 'Toz Alma';
-            time = '09:00';
-            icon = Icons.cleaning_services;
-          } else if (index == 1) {
-            title = 'Çamaşır Yıkama';
-            time = '10:30';
-            icon = Icons.local_laundry_service;
-          } else if (index == 2) {
-            title = 'Yemek Hazırlama';
-            time = '17:00';
-            icon = Icons.restaurant;
-          }
-        } else if (_selectedDayIndex == 2) {
-          if (index == 0) {
-            title = 'Banyo Temizliği';
-            time = '09:30';
-            icon = Icons.bathroom;
-          } else if (index == 1) {
-            title = 'Ütü';
-            time = '14:00';
-            icon = Icons.iron;
-          }
+        // Gerçek görev verilerini al
+        final task = tasksForSelectedDay[index];
+        
+        // Görev saatini biçimlendir
+        String time = "Tüm gün";
+        if (task.dueDate != null) {
+          final hour = task.dueDate!.hour.toString().padLeft(2, '0');
+          final minute = task.dueDate!.minute.toString().padLeft(2, '0');
+          time = "$hour:$minute";
         }
+        
+        // Görevin ikonunu al
+        IconData icon = IconData(task.iconCode, fontFamily: 'MaterialIcons');
 
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
@@ -339,9 +320,8 @@ class _WeeklyPlannerPageState extends State<WeeklyPlannerPage> {
               leading: CircleAvatar(
                 backgroundColor: AppTheme.primaryColor,
                 child: Icon(icon, color: Colors.white),
-              ),
-              title: Text(
-                title,
+              ),              title: Text(
+                task.title,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               subtitle: Row(
@@ -352,22 +332,22 @@ class _WeeklyPlannerPageState extends State<WeeklyPlannerPage> {
                   const SizedBox(width: 16),
                   const Icon(Icons.star, size: 16),
                   const SizedBox(width: 4),
-                  const Text('10 puan'),
+                  Text('${task.points} puan'),
                 ],
               ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
+                children: [                IconButton(
                     icon: const Icon(Icons.edit, color: Colors.grey),
                     onPressed: () {
-                      // Düzenleme işlevi
+                      // Görev düzenleme sayfasını aç
+                      _showEditTaskDialog(task);
                     },
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete, color: Colors.grey),
                     onPressed: () {
-                      _showDeleteConfirmation(index);
+                      _showDeleteConfirmation(task.id);
                     },
                   ),
                 ],
@@ -397,7 +377,39 @@ class _WeeklyPlannerPageState extends State<WeeklyPlannerPage> {
     );
   }
 
-  void _showDeleteConfirmation(int taskIndex) {
+  // Görev düzenleme diyaloğunu göster
+  void _showEditTaskDialog(Task task) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Görevi Düzenle'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('${task.title} görevini düzenlemek için gerekli arayüz henüz geliştirme aşamasındadır.'),
+                const SizedBox(height: 16),
+                // Burada görev düzenleme formu oluşturulacak
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('Kapat'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Görev silme onayı
+  void _showDeleteConfirmation(String taskId) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -413,12 +425,14 @@ class _WeeklyPlannerPageState extends State<WeeklyPlannerPage> {
           TextButton(
             onPressed: () {
               // Görevi silme işlevi
+              final userProvider = Provider.of<UserProvider>(context, listen: false);
+              userProvider.deleteTask(taskId);
+              
+              // Görev listesini güncelle
               setState(() {
-                if (_taskCountByDay.containsKey(_selectedDayIndex)) {
-                  _taskCountByDay[_selectedDayIndex] = 
-                      _taskCountByDay[_selectedDayIndex]! - 1;
-                }
+                _updateTaskCounts();
               });
+              
               Navigator.of(context).pop();
             },
             child: const Text('Sil', style: TextStyle(color: Colors.red)),

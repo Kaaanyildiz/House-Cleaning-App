@@ -5,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:house_cleaning/constants/app_theme.dart';
 import 'package:house_cleaning/screens/home_page.dart';
 import 'package:house_cleaning/services/user_provider.dart';
+import 'package:house_cleaning/services/motivation_provider.dart';
 import 'package:house_cleaning/services/notification_service.dart';
 import 'package:house_cleaning/models/user_model.dart';
 import 'package:house_cleaning/models/task_model.dart';
@@ -43,6 +44,7 @@ void main() async {
   await Hive.openBox<User>('users');
   await Hive.openBox<Task>('tasks');
   await Hive.openBox<app_badge.Badge>('badges');
+  await Hive.openBox('motivation_settings');
   
   // Bildirimleri başlat
   await NotificationService.instance.initialize();
@@ -58,14 +60,21 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProxyProvider<UserProvider, MotivationProvider>(
+          create: (_) => MotivationProvider(),
+          update: (_, userProvider, motivationProvider) {
+            if (motivationProvider != null) {
+              motivationProvider.updatePremiumStatus(userProvider.showPremiumQuotes);
+            }
+            return motivationProvider ?? MotivationProvider();
+          },
+        ),
       ],
       child: MaterialApp(
-        title: 'Temizlik Asistanı',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.system, // Sistemin tema ayarını kullan
+        title: 'Ev Temizlik Asistanı',
+        theme: AppTheme.instance.currentTheme,
         home: const HomePage(),
+        debugShowCheckedModeBanner: false,
       ),
     );
   }
