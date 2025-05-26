@@ -20,6 +20,9 @@ class User {
   
   @HiveField(5)
   Map<DateTime, List<String>> completedTasks; // Tarih ve tamamlanan görev id'leri
+  
+  @HiveField(6)
+  int completedChallengeCount;
 
   User({
     required this.id,
@@ -28,6 +31,7 @@ class User {
     this.level = 1,
     List<String>? badges,
     Map<DateTime, List<String>>? completedTasks,
+    this.completedChallengeCount = 0,
   })  : badges = badges ?? [],
         completedTasks = completedTasks ?? {};
 
@@ -50,7 +54,6 @@ class User {
       badges.add(badge);
     }
   }
-
   void completeTask(String taskId) {
     final today = DateTime(
       DateTime.now().year,
@@ -63,5 +66,9 @@ class User {
     } else {
       completedTasks[today] = [taskId];
     }
+  }
+  
+  void completeChallenge() {
+    completedChallengeCount++;
   }
 }

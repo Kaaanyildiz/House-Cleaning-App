@@ -282,9 +282,15 @@ class UserProvider extends ChangeNotifier {
     _saveData();
     notifyListeners();
   }
-
   void addBadge(String badge) {
     _currentUser.addBadge(badge);
+    _saveData();
+    notifyListeners();
+  }
+  
+  // Meydan okuma tamamlandı
+  void completeChallenge() {
+    _currentUser.completeChallenge();
     _saveData();
     notifyListeners();
   }

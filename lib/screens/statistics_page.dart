@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:house_cleaning/constants/app_theme.dart';
 import 'package:house_cleaning/models/task_model.dart';
 import 'package:house_cleaning/services/user_provider.dart';
+import 'package:house_cleaning/widgets/premium_effects.dart';
 
 class StatisticsPage extends StatefulWidget {
   const StatisticsPage({Key? key}) : super(key: key);
@@ -13,7 +14,8 @@ class StatisticsPage extends StatefulWidget {
   State<StatisticsPage> createState() => _StatisticsPageState();
 }
 
-class _StatisticsPageState extends State<StatisticsPage> {  // İstatistik verileri
+class _StatisticsPageState extends State<StatisticsPage> {
+  // İstatistik verileri
   // Varsayılan değerlerle başlatıyoruz, böylece late error olmaz
   Map<String, double> _categoryDistribution = {
     'Mutfak': 25, 
@@ -42,7 +44,8 @@ class _StatisticsPageState extends State<StatisticsPage> {  // İstatistik veril
     // Hemen çağırıyoruz, postFrameCallback'e gerek yok
     _loadStatistics();
   }
-    // İstatistikleri yükle
+  
+  // İstatistikleri yükle
   void _loadStatistics() {
     // İlk başta yükleme durumunu true yapıyoruz
     setState(() {
@@ -214,57 +217,143 @@ class _StatisticsPageState extends State<StatisticsPage> {  // İstatistik veril
     
     // Ortalamayı hesapla
     return totalDaysWithTasks > 0 ? totalMinutes / totalDaysWithTasks : 0;
-  }  @override
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final themeOption = AppTheme.instance.currentThemeOption;
+    
     return Consumer<UserProvider>(
       builder: (context, userProvider, child) {
         if (!userProvider.isLoaded || _isLoading) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
+          return Scaffold(
+            body: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    themeOption.primary.withOpacity(0.1),
+                    themeOption.accent.withOpacity(0.1),
+                  ],
+                ),
+              ),
+              child: const Center(
+                child: ShimmerEffect(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
             ),
           );
         }
 
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('İstatistikler'),
-            centerTitle: true,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.date_range),
-                onPressed: () {
-                  // Tarih aralığı seçimi
-                  _showDateRangeSelector();
-                },
-              ),
-            ],
-          ),
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Özet kartları
-                  _buildSummarySection(),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Görev dağılımı pasta grafiği
-                  _buildPieChartSection(),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Haftalık aktivite grafiği
-                  _buildWeeklyActivitySection(),
-
-                  const SizedBox(height: 24),
-
-                  // Alışkanlıklar ve başarımlar
-                  _buildHabitsSection(),
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  themeOption.primary.withOpacity(0.05),
+                  themeOption.accent.withOpacity(0.05),
+                  Colors.white,
                 ],
+                stops: const [0.0, 0.3, 1.0],
               ),
+            ),
+            child: CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  expandedHeight: 120,
+                  floating: false,
+                  pinned: true,
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: AnimatedGradientContainer(
+                      colors: [
+                        themeOption.primary,
+                        themeOption.accent,
+                      ],
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              themeOption.primary,
+                              themeOption.accent,
+                            ],
+                          ),
+                        ),
+                        child: const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(height: 40),
+                              Text(
+                                '📊 İstatistikler',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Temizlik Performansın',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  backgroundColor: Colors.transparent,
+                  actions: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: NeumorphismContainer(
+                        padding: const EdgeInsets.all(8),
+                        child: IconButton(
+                          icon: Icon(Icons.date_range, color: themeOption.primary),
+                          onPressed: () {
+                            _showDateRangeSelector();
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Özet kartları
+                        _buildSummarySection(),
+                        
+                        const SizedBox(height: 24),
+                        
+                        // Görev dağılımı pasta grafiği
+                        _buildPieChartSection(),
+                        
+                        const SizedBox(height: 24),
+                        
+                        // Haftalık aktivite grafiği
+                        _buildWeeklyActivitySection(),
+
+                        const SizedBox(height: 24),
+
+                        // Alışkanlıklar ve başarımlar
+                        _buildHabitsSection(),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -273,31 +362,47 @@ class _StatisticsPageState extends State<StatisticsPage> {  // İstatistik veril
   }
 
   Widget _buildSummarySection() {
+    final themeOption = AppTheme.instance.currentThemeOption;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Özet İstatistikler',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        AnimatedGradientContainer(
+          colors: [
+            themeOption.primary,
+            themeOption.accent,
+          ],
+          borderRadius: BorderRadius.circular(12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: const Text(
+            '📊 Özet İstatistikler',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
-              child: _buildSummaryCard(
-                icon: Icons.check_circle,
-                title: 'Tamamlanan Görev',
+              child: _buildPremiumSummaryCard(
+                icon: Icons.check_circle_rounded,
+                title: 'Tamamlanan',
+                subtitle: 'Görev',
                 value: '$_totalCompletedTasks',
-                color: Colors.green[700]!,
+                gradient: [Colors.green[400]!, Colors.green[600]!],
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildSummaryCard(
-                icon: Icons.local_fire_department,
-                title: 'Gün Serisi',
+              child: _buildPremiumSummaryCard(
+                icon: Icons.local_fire_department_rounded,
+                title: 'Gün',
+                subtitle: 'Serisi',
                 value: '$_streakDays',
-                color: Colors.orange[700]!,
+                gradient: [Colors.orange[400]!, Colors.orange[600]!],
               ),
             ),
           ],
@@ -306,20 +411,22 @@ class _StatisticsPageState extends State<StatisticsPage> {  // İstatistik veril
         Row(
           children: [
             Expanded(
-              child: _buildSummaryCard(
-                icon: Icons.star,
-                title: 'Toplam Puan',
+              child: _buildPremiumSummaryCard(
+                icon: Icons.star_rounded,
+                title: 'Toplam',
+                subtitle: 'Puan',
                 value: '$_totalPoints',
-                color: Colors.purple[700]!,
+                gradient: [Colors.purple[400]!, Colors.purple[600]!],
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildSummaryCard(
-                icon: Icons.access_time,
-                title: 'Günlük Ortalama Süre',
-                value: '$_averageTimePerDay dk',
-                color: Colors.blue[700]!,
+              child: _buildPremiumSummaryCard(
+                icon: Icons.access_time_rounded,
+                title: 'Günlük Ort.',
+                subtitle: 'Süre',
+                value: '${_averageTimePerDay.toInt()} dk',
+                gradient: [Colors.blue[400]!, Colors.blue[600]!],
               ),
             ),
           ],
@@ -328,277 +435,64 @@ class _StatisticsPageState extends State<StatisticsPage> {  // İstatistik veril
     );
   }
 
-  Widget _buildSummaryCard({
+  Widget _buildPremiumSummaryCard({
     required IconData icon,
     required String title,
+    required String subtitle,
     required String value,
-    required Color color,
+    required List<Color> gradient,
   }) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              color: color,
-              size: 32,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPieChartSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Görev Dağılımı',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 200,
-          child: Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: _buildSimplePieChart(),
-              ),
-              Expanded(
-                flex: 2,
-                child: _buildPieChartLegend(),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSimplePieChart() {
-    return CustomPaint(
-      size: const Size(150, 150),
-      painter: _PieChartPainter(_categoryDistribution),
-    );
-  }
-
-  Widget _buildPieChartLegend() {
-    final List<Color> colors = [
-      Colors.blue[400]!,
-      Colors.green[400]!,
-      Colors.red[400]!,
-      Colors.amber[400]!,
-    ];
-
-    int index = 0;
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: _categoryDistribution.entries.map((entry) {
-        final color = colors[index % colors.length];
-        index++;
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
-          child: Row(
-            children: [
-              Container(
-                width: 16,
-                height: 16,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '${entry.key}: %${entry.value.round()}',
-                style: const TextStyle(fontSize: 14),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildWeeklyActivitySection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Haftalık Aktivite',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 200,
-          child: _buildBarChart(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBarChart() {
-    final List<String> days = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
-    final List<int> values = _completedTasksByDay.values.toList();
-    final int maxValue = values.reduce(math.max);
-
-    return Row(
-      children: List.generate(days.length, (index) {
-        final int currentValue = values[index];
-        final double percentage = maxValue > 0 ? currentValue / maxValue : 0;
-
-        return Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text(
-                currentValue.toString(),
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              Flexible(
-                child: Container(
-                  width: 20,
-                  height: 150 * percentage,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.5 + 0.5 * percentage),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(days[index]),
-            ],
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget _buildHabitsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Alışkanlıklar ve Başarımlar',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                _buildHabitItem(
-                  icon: Icons.auto_awesome,
-                  title: 'En iyi olduğun kategori',
-                  value: 'Mutfak',
-                  progress: 0.7,
-                ),
-                const Divider(),
-                _buildHabitItem(
-                  icon: Icons.whatshot,
-                  title: 'En verimli gün',
-                  value: 'Cumartesi',
-                  progress: 0.9,
-                ),
-                const Divider(),
-                _buildHabitItem(
-                  icon: Icons.access_time_filled,
-                  title: 'En çok görev yapılan saat',
-                  value: '10:00 - 12:00',
-                  progress: 0.6,
-                ),
-                const Divider(),
-                _buildHabitItem(
-                  icon: Icons.trending_up,
-                  title: 'Gelişim Trendi',
-                  value: 'Yükseliyor',
-                  progress: 0.8,
+    return GlassmorphismContainer(
+      padding: const EdgeInsets.all(16.0),
+      borderRadius: 16,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: gradient),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: gradient[0].withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
+            child: Icon(
+              icon,
+              color: Colors.white,
+              size: 28,
+            ),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHabitItem({
-    required IconData icon,
-    required String title,
-    required String value,
-    required double progress,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                icon,
-                color: AppTheme.primaryColor,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              const SizedBox(width: 32),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.only(left: 32),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 8,
-                backgroundColor: Colors.grey[300],
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  AppTheme.primaryColor.withOpacity(0.7),
-                ),
+          ShimmerEffect(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: gradient[1],
               ),
             ),
           ),
@@ -607,96 +501,426 @@ class _StatisticsPageState extends State<StatisticsPage> {  // İstatistik veril
     );
   }
 
-  void _showDateRangeSelector() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Tarih Aralığı'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text('Bu Hafta'),
-              onTap: () {
-                Navigator.pop(context);
-                // Bu haftanın verilerini göster
-              },
-            ),
-            ListTile(
-              title: const Text('Bu Ay'),
-              onTap: () {
-                Navigator.pop(context);
-                // Bu ayın verilerini göster
-              },
-            ),
-            ListTile(
-              title: const Text('Son 3 Ay'),
-              onTap: () {
-                Navigator.pop(context);
-                // Son 3 ayın verilerini göster
-              },
-            ),
-            ListTile(
-              title: const Text('Tüm Zamanlar'),
-              onTap: () {
-                Navigator.pop(context);
-                // Tüm zamanların verilerini göster
-              },
-            ),
+  Widget _buildPieChartSection() {
+    final themeOption = AppTheme.instance.currentThemeOption;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedGradientContainer(
+          colors: [
+            themeOption.primary,
+            themeOption.accent,
           ],
+          borderRadius: BorderRadius.circular(12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: const Text(
+            '🍕 Görev Dağılımı',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
         ),
-      ),
+        const SizedBox(height: 16),
+        GlassmorphismContainer(
+          padding: const EdgeInsets.all(24),
+          borderRadius: 20,
+          child: Column(
+            children: [
+              SizedBox(
+                height: 250,
+                child: PieChart(
+                  PieChartData(
+                    borderData: FlBorderData(show: false),
+                    sectionsSpace: 2,
+                    centerSpaceRadius: 40,
+                    sections: _getCategorySections(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              _buildCategoryLegend(),
+            ],
+          ),
+        ),
+      ],
     );
   }
-}
 
-class _PieChartPainter extends CustomPainter {
-  final Map<String, double> data;
-
-  _PieChartPainter(this.data);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = math.min(size.width, size.height) / 2;
-    
-    final paint = Paint()
-      ..style = PaintingStyle.fill;
-
-    double startAngle = 0;
-    int index = 0;
-    
-    final colors = [
-      Colors.blue[400]!,
-      Colors.green[400]!,
-      Colors.red[400]!,
-      Colors.amber[400]!,
+  List<PieChartSectionData> _getCategorySections() {
+    final List<PieChartSectionData> sections = [];
+    final List<Color> colors = [
+      Colors.blueAccent,    // Mutfak
+      Colors.redAccent,     // Banyo
+      Colors.greenAccent,   // Genel
+      Colors.purpleAccent,  // Özel
     ];
     
-    final total = data.values.fold<double>(0, (sum, value) => sum + value);
-    
-    data.forEach((category, value) {
-      final sweepAngle = value * 2 * math.pi / total;
-      
-      paint.color = colors[index % colors.length];
-      
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        startAngle,
-        sweepAngle,
-        true,
-        paint,
+    int index = 0;
+    _categoryDistribution.forEach((key, value) {
+      sections.add(
+        PieChartSectionData(
+          color: colors[index % colors.length],
+          value: value,
+          title: '${value.toStringAsFixed(0)}%',
+          radius: 100,
+          titleStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
       );
-      
-      startAngle += sweepAngle;
       index++;
     });
     
-    // Orta kısımda boşluk oluştur (isteğe bağlı)
-    paint.color = Colors.white;
-    canvas.drawCircle(center, radius * 0.5, paint);
+    return sections;
   }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  Widget _buildCategoryLegend() {
+    final List<Color> colors = [
+      Colors.blueAccent,    // Mutfak
+      Colors.redAccent,     // Banyo
+      Colors.greenAccent,   // Genel
+      Colors.purpleAccent,  // Özel
+    ];
+    
+    return Wrap(
+      spacing: 16,
+      runSpacing: 8,
+      children: [
+        _buildLegendItem('Mutfak', colors[0]),
+        _buildLegendItem('Banyo', colors[1]),
+        _buildLegendItem('Genel', colors[2]),
+        _buildLegendItem('Özel', colors[3]),
+      ],
+    );
+  }
+
+  Widget _buildLegendItem(String title, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(title),
+      ],
+    );
+  }
+
+  Widget _buildWeeklyActivitySection() {
+    final themeOption = AppTheme.instance.currentThemeOption;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedGradientContainer(
+          colors: [
+            themeOption.primary,
+            themeOption.accent,
+          ],
+          borderRadius: BorderRadius.circular(12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: const Text(
+            '📈 Haftalık Aktivite',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        GlassmorphismContainer(
+          padding: const EdgeInsets.all(24),
+          borderRadius: 20,
+          child: Column(
+            children: [
+              SizedBox(
+                height: 200,
+                child: BarChart(
+                  BarChartData(
+                    alignment: BarChartAlignment.spaceAround,
+                    maxY: _getMaxCompletedTasksByDay() * 1.2,
+                    barGroups: _getBarGroups(),
+                    borderData: FlBorderData(show: false),
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      horizontalInterval: 1,
+                      getDrawingHorizontalLine: (value) {
+                        return FlLine(
+                          color: Colors.grey[300],
+                          strokeWidth: 1,
+                        );
+                      },
+                    ),
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 30,
+                          getTitlesWidget: (value, meta) {
+                            if (value == 0) return const SizedBox();
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: Text(
+                                value.toInt().toString(),
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 11,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      topTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          getTitlesWidget: (value, meta) {
+                            final weekDays = ['P', 'S', 'Ç', 'P', 'C', 'C', 'P'];
+                            if (value >= 0 && value < weekDays.length) {
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: Text(
+                                  weekDays[value.toInt()],
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              );
+                            }
+                            return const SizedBox();
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Son 7 günde tamamlanan görevler',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  double _getMaxCompletedTasksByDay() {
+    double max = 0;
+    for (var count in _completedTasksByDay.values) {
+      if (count > max) max = count.toDouble();
+    }
+    return max == 0 ? 5 : max; // En az 5 göster
+  }
+
+  List<BarChartGroupData> _getBarGroups() {
+    final List<BarChartGroupData> barGroups = [];
+    final List<String> weekDays = [
+      'Pazartesi',
+      'Salı',
+      'Çarşamba',
+      'Perşembe',
+      'Cuma',
+      'Cumartesi',
+      'Pazar',
+    ];
+    
+    for (int i = 0; i < weekDays.length; i++) {
+      final value = _completedTasksByDay[weekDays[i]] ?? 0;
+      barGroups.add(
+        BarChartGroupData(
+          x: i,
+          barRods: [
+            BarChartRodData(
+              toY: value.toDouble(),
+              color: AppTheme.primaryColor,
+              width: 20,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+              backDrawRodData: BackgroundBarChartRodData(
+                show: true,
+                toY: _getMaxCompletedTasksByDay(),
+                color: Colors.grey[200],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    return barGroups;
+  }
+
+  Widget _buildHabitsSection() {
+    final themeOption = AppTheme.instance.currentThemeOption;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedGradientContainer(
+          colors: [
+            themeOption.primary,
+            themeOption.accent,
+          ],
+          borderRadius: BorderRadius.circular(12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: const Text(
+            '✨ Alışkanlıklar ve Başarımlar',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        GlassmorphismContainer(
+          padding: const EdgeInsets.all(24),
+          borderRadius: 20,
+          child: Column(
+            children: [
+              _buildHabitProgressIndicator(
+                title: 'Temizlik düzeni',
+                subtitle: 'Her gün en az bir görev tamamla',
+                progress: _streakDays / 30,
+                value: '$_streakDays/30 gün',
+              ),
+              const SizedBox(height: 24),
+              _buildHabitProgressIndicator(
+                title: 'Temizlik uzmanı',
+                subtitle: 'En az 100 görev tamamla',
+                progress: _totalCompletedTasks / 100,
+                value: '$_totalCompletedTasks/100 görev',
+              ),
+              const SizedBox(height: 24),
+              _buildHabitProgressIndicator(
+                title: 'Puan avcısı',
+                subtitle: '1000 puan kazan',
+                progress: _totalPoints / 1000,
+                value: '$_totalPoints/1000 puan',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHabitProgressIndicator({
+    required String title,
+    required String subtitle,
+    required double progress,
+    required String value,
+  }) {
+    final themeOption = AppTheme.instance.currentThemeOption;
+    // 0 ile 1 arasına sınırla
+    progress = progress.clamp(0.0, 1.0);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+            ShimmerEffect(
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: themeOption.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          height: 8,
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Row(
+            children: [
+              Flexible(
+                flex: (progress * 100).toInt(),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        themeOption.primary,
+                        themeOption.accent,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+              Flexible(
+                flex: ((1 - progress) * 100).toInt(),
+                child: Container(),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showDateRangeSelector() {
+    // Bu özellik henüz aktif değil
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Bu özellik henüz geliştirme aşamasındadır.'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
 }
