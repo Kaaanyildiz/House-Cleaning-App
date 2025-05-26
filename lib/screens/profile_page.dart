@@ -4,7 +4,8 @@ import '../constants/app_theme.dart';
 import '../models/user_model.dart';
 import '../services/user_provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'statistics_page.dart';
+import 'badges_page.dart';
+import 'settings_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -16,7 +17,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStateMixin {
   final _nameController = TextEditingController();
   bool _isEditing = false;
-  late TabController _tabController;
+  // TabController kaldırıldı
   
   // Ayarlar için değişkenler
   bool _isDarkMode = false;
@@ -37,7 +38,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this); // 3 sekme olacak şekilde güncellendi
+    // TabController kaldırıldı
     _loadSettings();
   }
     // Mevcut ayarları yükle
@@ -63,7 +64,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   @override
   void dispose() {
     _nameController.dispose();
-    _tabController.dispose();
+    // _tabController.dispose(); // Kaldırıldı
     super.dispose();
   }
 
@@ -72,197 +73,81 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     return Consumer<UserProvider>(
       builder: (context, userProvider, child) {
         final user = userProvider.currentUser;
-        
         _nameController.text = user.name;
-        
         return Scaffold(
           appBar: AppBar(
             title: const Text('Profil'),
             centerTitle: true,
             actions: [
-              if (_tabController.index == 0)
-                IconButton(
-                  icon: Icon(_isEditing ? Icons.check : Icons.edit),
-                  onPressed: () {
-                    setState(() {
-                      if (_isEditing) {
-                        // Değişiklikleri kaydet
-                        _saveUserChanges(userProvider);
-                      }
-                      _isEditing = !_isEditing;
-                    });
-                  },
-                ),
-            ],            bottom: TabBar(
-              controller: _tabController,
-              indicatorColor: AppTheme.primaryColor,
-              labelColor: Theme.of(context).brightness == Brightness.dark 
-                  ? Colors.white 
-                  : Colors.black,
-              tabs: const [
-                Tab(
-                  icon: Icon(Icons.person),
-                  text: 'Profil',
-                ),
-                Tab(
-                  icon: Icon(Icons.settings),
-                  text: 'Ayarlar',
-                ),
-                Tab(
-                  icon: Icon(Icons.bar_chart),
-                  text: 'İstatistikler',
-                ),
-              ],
-            ),
-          ),          body: TabBarView(
-            controller: _tabController,
-            children: [
-              // Profil sekmesi
-              SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Profil kartı
-                    _buildProfileCard(user),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Özet istatistikler
-                    _buildStatisticsSection(userProvider),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Rozetler
-                    _buildBadgesSection(user),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Premium durumu
-                    _buildPremiumSection(userProvider),
-                  ],
-                ),
-              ),
-                // Ayarlar sekmesi
-              ListView(
-                children: [
-                  const SizedBox(height: 16),
-                  
-                  // Tema Ayarları
-                  _buildSectionHeader('Tema Ayarları'),
-                  _buildSettingSwitch(
-                    title: 'Karanlık Mod',
-                    subtitle: 'Uygulamayı koyu renk temasıyla görüntüle',
-                    value: _isDarkMode,
-                    onChanged: (value) {
-                      setState(() {
-                        _isDarkMode = value;
-                      });
-                      // Tema değiştirme fonksiyonunu çağır
-                      userProvider.saveSettings({'isDarkMode': value});
-                    },
-                  ),
-                  _buildColorSelector(),
-                  
-                  const Divider(),
-                  
-                  // Bildirimler
-                  _buildSectionHeader('Bildirim Ayarları'),
-                  _buildSettingSwitch(
-                    title: 'Bildirimler',
-                    subtitle: 'Görev hatırlatmaları ve motivasyon mesajları al',
-                    value: _notificationsEnabled,
-                    onChanged: (value) {
-                      setState(() {
-                        _notificationsEnabled = value;
-                      });
-                      // Bildirim ayarlarını kaydet
-                      userProvider.saveNotificationSettings(notificationsEnabled: value);
-                    },
-                  ),
-                  _buildSettingSwitch(
-                    title: 'Ses Efektleri',
-                    subtitle: 'Görev tamamlama ve rozet kazanma sesi',
-                    value: _soundEffectsEnabled,
-                    onChanged: (value) {
-                      setState(() {
-                        _soundEffectsEnabled = value;
-                      });
-                      
-                      // Ses ayarlarını kaydet
-                      userProvider.saveNotificationSettings(
-                        notificationsEnabled: _notificationsEnabled,
-                        soundEnabled: value
-                      );
-                    },
-                  ),
-                  ListTile(
-                    title: const Text('Görev Hatırlatmaları'),
-                    subtitle: const Text('Günlük hatırlatıcıların sıklığını ayarlayın'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      _showReminderDialog();
-                    },
-                  ),
-                  
-                  const Divider(),
-                  
-                  // Kişiselleştirme
-                  _buildSectionHeader('Kişiselleştirme'),
-                  _buildLanguageSelector(),
-                  ListTile(
-                    title: const Text('Görev Zorluk Seviyesi'),
-                    subtitle: const Text('Görevlerin varsayılan zorluk düzeyini ayarlayın'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      _showDifficultySelector();
-                    },
-                  ),
-                  
-                  const Divider(),
-                  
-                  // Hesap ve Gizlilik
-                  _buildSectionHeader('Hesap ve Gizlilik'),
-                  ListTile(
-                    leading: const Icon(Icons.backup),
-                    title: const Text('Veri Yedekleme'),
-                    subtitle: const Text('Görevleri ve ilerleme durumunu yedekle'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      _showBackupDialog();
-                    },
-                  ),
-                  
-                  const Divider(),
-                  
-                  // Hakkında
-                  _buildSectionHeader('Hakkında'),
-                  ListTile(
-                    leading: const Icon(Icons.info),
-                    title: const Text('Uygulama Hakkında'),
-                    onTap: () {
-                      _showAboutDialog();
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.help),
-                    title: const Text('Yardım ve Destek'),
-                    onTap: () {
-                      // Yardım sayfasına git
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.star),
-                    title: const Text('Uygulamayı Puanla'),
-                    onTap: () {
-                      // Puanlama sayfasına git
-                    },
-                  ),
-                  
-                  const SizedBox(height: 32),
-                ],
+              IconButton(
+                icon: Icon(_isEditing ? Icons.check : Icons.edit),
+                onPressed: () {
+                  setState(() {
+                    if (_isEditing) {
+                      _saveUserChanges(userProvider);
+                    }
+                    _isEditing = !_isEditing;
+                  });
+                },
               ),
             ],
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildProfileCard(user),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const BadgesPage()),
+                          );
+                        },
+                        icon: const Icon(Icons.emoji_events),
+                        label: const Text('Rozetler'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber[600],
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const SettingsPage()),
+                          );
+                        },
+                        icon: const Icon(Icons.settings),
+                        label: const Text('Ayarlar'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueGrey[700],
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                _buildStatisticsSection(userProvider),
+                const SizedBox(height: 24),
+                _buildPremiumSection(userProvider),
+              ],
+            ),
           ),
         );
       },
@@ -434,97 +319,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     );
   }
   
-  Widget _buildBadgesSection(User user) {
-    // Tamamlanan rozetlerin listesi
-    final List<Map<String, dynamic>> badges = [
-      {
-        'name': 'Başlangıç',
-        'icon': Icons.play_circle,
-        'description': 'İlk görevi tamamladınız',
-        'unlocked': true,
-      },
-      {
-        'name': 'Çalışkan',
-        'icon': Icons.work,
-        'description': '10 görev tamamlandı',
-        'unlocked': user.totalCompletedTasks >= 10,
-      },
-      {
-        'name': 'Uzman Temizlikçi',
-        'icon': Icons.cleaning_services,
-        'description': '50 görev tamamlandı',
-        'unlocked': user.totalCompletedTasks >= 50,
-      },
-      {
-        'name': 'Seri Oluşturucu',
-        'icon': Icons.local_fire_department,
-        'description': '7 günlük seri',
-        'unlocked': false,
-      },
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Rozetler',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 100,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: badges.length,
-            itemBuilder: (context, index) {
-              final badge = badges[index];
-              
-              return Container(
-                width: 80,
-                margin: const EdgeInsets.only(right: 12),
-                child: Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: badge['unlocked'] ? AppTheme.primaryColor : Colors.grey[300],
-                        shape: BoxShape.circle,
-                        boxShadow: badge['unlocked'] ? [
-                          BoxShadow(
-                            color: AppTheme.primaryColor.withOpacity(0.3),
-                            spreadRadius: 1,
-                            blurRadius: 4,
-                          ),
-                        ] : null,
-                      ),
-                      child: Icon(
-                        badge['icon'],
-                        color: badge['unlocked'] ? Colors.white : Colors.grey[600],
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      badge['name'],
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: badge['unlocked'] ? FontWeight.bold : FontWeight.normal,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-    Widget _buildPremiumSection(UserProvider userProvider) {
+  Widget _buildPremiumSection(UserProvider userProvider) {
     // User model içerisinde isPremium alanı olmadığını varsayarak şimdilik
     // bir kontrol ekleyelim, gerçek uygulamada kullanıcı modelinde olmalıdır
     final isPremium = userProvider.currentUser.points > 1000;
@@ -609,60 +404,6 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     void _saveUserChanges(UserProvider userProvider) {
     if (_nameController.text.isNotEmpty) {
       userProvider.updateUserName(_nameController.text);
-    }
-  }
-  
-  void _showPremiumDialog(UserProvider userProvider) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.star, color: Colors.amber),
-            const SizedBox(width: 8),
-            const Text('Premium Abonelik'),
-          ],
-        ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Bu özellik henüz geliştirme aşamasındadır.'),
-            SizedBox(height: 16),
-            Text('Premium abonelik, uygulamadaki reklamsız deneyim, özel temalar, premium motivasyon alıntıları ve daha fazlasını sunar.'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('İptal'),
-          ),
-          // Demo özelliği: Test için Premium durumunu değiştir
-          TextButton(
-            onPressed: () {
-              userProvider.setPremiumStatus(!userProvider.isPremium);
-              Navigator.of(context).pop();
-            },
-            child: const Text('Test Et', style: TextStyle(color: Colors.amber)),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  String _getBadgeName(String badgeId) {
-    switch (badgeId) {
-      case 'first_task':
-        return 'İlk Görev';
-      case 'kitchen_master':
-        return 'Mutfak Ustası';
-      case 'bathroom_hero':
-        return 'Banyo Kahramanı';
-      case 'cleaning_expert':
-        return 'Temizlik Uzmanı';
-      default:
-        return 'Rozet';
     }
   }
   

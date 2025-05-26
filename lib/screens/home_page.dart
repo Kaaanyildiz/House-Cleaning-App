@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:house_cleaning/constants/app_theme.dart';
 import 'package:house_cleaning/screens/tasks_page.dart';
 import 'package:house_cleaning/screens/weekly_planner_page.dart';
-import 'package:house_cleaning/screens/badges_page.dart';
+import 'package:house_cleaning/screens/statistics_page.dart'; // İstatistikler sayfası için import
 import 'package:house_cleaning/screens/profile_page.dart';
 import 'package:house_cleaning/services/user_provider.dart';
 import 'package:house_cleaning/services/motivation_provider.dart';
@@ -22,7 +22,7 @@ class _HomePageState extends State<HomePage> {
     const DashboardPage(),
     const TasksPage(),
     const WeeklyPlannerPage(),
-    const BadgesPage(),
+    const StatisticsPage(), // Rozetler yerine İstatistikler
     const ProfilePage(),
   ];
 
@@ -72,12 +72,13 @@ class _HomePageState extends State<HomePage> {
               size: 20,
             ),
             label: 'Planlayıcı',
-          ),          BottomNavigationBarItem(
+          ),
+          BottomNavigationBarItem(
             icon: Icon(
-              _selectedIndex == 3 ? Icons.emoji_events : Icons.emoji_events_outlined,
+              _selectedIndex == 3 ? Icons.bar_chart : Icons.bar_chart_outlined,
               size: 20,
             ),
-            label: 'Rozetler',
+            label: 'İstatistikler',
           ),
           BottomNavigationBarItem(
             icon: Icon(
