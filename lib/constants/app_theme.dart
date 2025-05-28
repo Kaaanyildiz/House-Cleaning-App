@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 
 class ThemeOption {
   final String name;
@@ -10,6 +9,7 @@ class ThemeOption {
   late final LinearGradient gradient;
   late final LinearGradient cardGradient;
   late final LinearGradient shimmerGradient;
+  late final LinearGradient darkGradient; // Karanlık mod için gradient eklendi
 
   ThemeOption({
     required this.name,
@@ -33,6 +33,19 @@ class ThemeOption {
       stops: const [0.0, 0.3, 0.7, 1.0],
     );
     
+    // Karanlık mod için özel gradient
+    this.darkGradient = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        primary.withOpacity(0.4),
+        primary.withOpacity(0.3),
+        accent.withOpacity(0.3),
+        accent.withOpacity(0.4),
+      ],
+      stops: const [0.0, 0.3, 0.7, 1.0],
+    );
+      
     this.cardGradient = LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
@@ -53,13 +66,40 @@ class ThemeOption {
       ],
     );
   }
-
   ThemeData toThemeData({bool isDark = false}) {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: primary,
       brightness: isDark ? Brightness.dark : Brightness.light,
       primary: primary,
       secondary: accent,
+      // Karanlık mod için daha yüksek kontrast renkleri
+      onSurface: isDark ? Colors.white : Colors.black87,
+      surface: isDark ? const Color(0xFF121212) : Colors.white,
+      onBackground: isDark ? Colors.white : Colors.black87,
+      background: isDark ? const Color(0xFF121212) : Colors.white,
+    );
+    
+    // Ana metin rengini karanlık modda beyaz, açık modda siyah yap
+    final textTheme = TextTheme(
+      bodyLarge: TextStyle(
+        color: isDark ? Colors.white : Colors.black87,
+      ),
+      bodyMedium: TextStyle(
+        color: isDark ? Colors.white : Colors.black87,
+      ),
+      bodySmall: TextStyle(
+        color: isDark ? Colors.white70 : Colors.black54,
+      ),
+      titleLarge: TextStyle(
+        color: isDark ? Colors.white : Colors.black87,
+        fontWeight: FontWeight.bold,
+      ),
+      titleMedium: TextStyle(
+        color: isDark ? Colors.white : Colors.black87,
+      ),
+      titleSmall: TextStyle(
+        color: isDark ? Colors.white70 : Colors.black54,
+      ),
     );
 
     return ThemeData(
@@ -67,10 +107,17 @@ class ThemeOption {
       colorScheme: colorScheme,
       primaryColor: primary,
       brightness: isDark ? Brightness.dark : Brightness.light,
+      textTheme: textTheme,
+      iconTheme: IconThemeData(
+        color: isDark ? Colors.white : Colors.black87,
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
-        foregroundColor: colorScheme.onPrimary,
+        foregroundColor: isDark ? Colors.white : colorScheme.onPrimary,
         elevation: 0,
+        iconTheme: IconThemeData(
+          color: isDark ? Colors.white : primary,
+        ),
       ),
       cardTheme: CardTheme(
         elevation: 0,
@@ -126,7 +173,7 @@ class ThemeOption {
   }
 }
 
-class AppTheme {
+class AppTheme extends ChangeNotifier {
   static final AppTheme _instance = AppTheme._internal();
   static AppTheme get instance => _instance;
   
@@ -134,6 +181,27 @@ class AppTheme {
 
   ThemeOption _currentThemeOption = themeOptions[0];
   bool _isDark = false;
+
+  // Tema değiştirme metodları
+  void setThemeOption(ThemeOption option) {
+    _currentThemeOption = option;
+    notifyListeners(); // UI'ı güncellemeyi tetikle
+  }
+
+  void toggleDarkMode() {
+    _isDark = !_isDark;
+    notifyListeners(); // UI'ı güncellemeyi tetikle
+  }
+
+  void setDarkMode(bool isDark) {
+    _isDark = isDark;
+    notifyListeners(); // UI'ı güncellemeyi tetikle
+  }
+
+  // Getters
+  ThemeOption get currentThemeOption => _currentThemeOption;
+  bool get isDark => _isDark;
+  ThemeData get currentTheme => _currentThemeOption.toThemeData(isDark: _isDark);
 
   // Premium color palette
   static const Color primaryColor = Color(0xFF4CAF50);
@@ -195,41 +263,30 @@ class AppTheme {
     ),
   ];
 
-  // Getters
-  ThemeOption get currentThemeOption => _currentThemeOption;
-  bool get isDark => _isDark;
-  ThemeData get currentTheme => _currentThemeOption.toThemeData(isDark: _isDark);
-
-  // Tema değiştirme metodları
-  void setThemeOption(ThemeOption option) {
-    _currentThemeOption = option;
-  }
-
-  void toggleDarkMode() {
-    _isDark = !_isDark;
-  }
-
-  void setDarkMode(bool isDark) {
-    _isDark = isDark;
-  }
-  
   // Premium visual effects
   static BoxDecoration getGlassmorphismDecoration({
     Color? color,
     double borderRadius = 20,
     double blur = 15,
+    bool isDark = false,
   }) {
     return BoxDecoration(
-      color: color ?? glassBg,
+      color: color ?? (isDark 
+          ? Colors.grey[900]!.withOpacity(0.3) 
+          : glassBg),
       borderRadius: BorderRadius.circular(borderRadius),
       border: Border.all(
-        color: Colors.white.withOpacity(0.2),
+        color: isDark 
+            ? Colors.white.withOpacity(0.1) 
+            : Colors.white.withOpacity(0.2),
         width: 1,
       ),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.1),
-          blurRadius: 20,
+          color: isDark 
+              ? Colors.black.withOpacity(0.2) 
+              : Colors.black.withOpacity(0.1),
+          blurRadius: isDark ? 15 : 20,
           offset: const Offset(0, 8),
           spreadRadius: -4,
         ),
@@ -241,24 +298,43 @@ class AppTheme {
     Color? backgroundColor,
     double borderRadius = 20,
     bool isPressed = false,
+    bool isDark = false,
   }) {
     return BoxDecoration(
-      color: backgroundColor ?? const Color(0xFFE2E8F0),
+      color: backgroundColor ?? (isDark 
+          ? const Color(0xFF2D3748) 
+          : const Color(0xFFE2E8F0)),
       borderRadius: BorderRadius.circular(borderRadius),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.white,
-          offset: Offset(isPressed ? 2 : -6, isPressed ? 2 : -6),
-          blurRadius: isPressed ? 4 : 12,
-          spreadRadius: isPressed ? -2 : 0,
-        ),
-        BoxShadow(
-          color: const Color(0xFFBECBE8).withOpacity(0.4),
-          offset: Offset(isPressed ? -2 : 6, isPressed ? -2 : 6),
-          blurRadius: isPressed ? 4 : 12,
-          spreadRadius: isPressed ? -2 : 0,
-        ),
-      ],
+      boxShadow: isDark 
+          ? [
+              // Karanlık mod için daha az belirgin gölgeler
+              BoxShadow(
+                color: Colors.black.withOpacity(0.6),
+                offset: Offset(isPressed ? 2 : -3, isPressed ? 2 : -3),
+                blurRadius: isPressed ? 3 : 6,
+                spreadRadius: isPressed ? -1 : -1,
+              ),
+              BoxShadow(
+                color: Colors.white.withOpacity(0.05),
+                offset: Offset(isPressed ? -2 : 3, isPressed ? -2 : 3),
+                blurRadius: isPressed ? 3 : 6,
+                spreadRadius: isPressed ? -1 : -2,
+              ),
+            ]
+          : [
+              BoxShadow(
+                color: Colors.white,
+                offset: Offset(isPressed ? 2 : -6, isPressed ? 2 : -6),
+                blurRadius: isPressed ? 4 : 12,
+                spreadRadius: isPressed ? -2 : 0,
+              ),
+              BoxShadow(
+                color: const Color(0xFFBECBE8).withOpacity(0.4),
+                offset: Offset(isPressed ? -2 : 6, isPressed ? -2 : 6),
+                blurRadius: isPressed ? 4 : 12,
+                spreadRadius: isPressed ? -2 : 0,
+              ),
+            ],
     );
   }
   

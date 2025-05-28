@@ -52,8 +52,39 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  // Tema değişikliklerini dinlemek için
+  late ThemeData _currentTheme;
+  
+  @override
+  void initState() {
+    super.initState();
+    // İlk tema değerini al
+    _currentTheme = AppTheme.instance.currentTheme;
+    // Tema değişikliklerini dinle
+    AppTheme.instance.addListener(_onThemeChanged);
+  }
+  
+  @override
+  void dispose() {
+    // Listener'ı temizle
+    AppTheme.instance.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+  
+  // Tema değiştiğinde UI'ı güncelle
+  void _onThemeChanged() {
+    setState(() {
+      _currentTheme = AppTheme.instance.currentTheme;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,10 +100,12 @@ class MyApp extends StatelessWidget {
             return motivationProvider ?? MotivationProvider();
           },
         ),
+        // AppTheme için değeri sağla
+        ChangeNotifierProvider.value(value: AppTheme.instance),
       ],
       child: MaterialApp(
         title: 'Ev Temizlik Asistanı',
-        theme: AppTheme.instance.currentTheme,
+        theme: _currentTheme, // Dinamik tema
         home: const HomePage(),
         debugShowCheckedModeBanner: false,
       ),

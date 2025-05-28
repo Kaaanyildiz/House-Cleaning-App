@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:math' as math;
 import 'package:house_cleaning/constants/app_theme.dart';
 import 'package:house_cleaning/services/user_provider.dart';
-import 'package:house_cleaning/models/task_model.dart';
 import 'package:house_cleaning/widgets/premium_effects.dart';
 
 class WeeklyPlannerPage extends StatefulWidget {
@@ -114,22 +112,29 @@ class _WeeklyPlannerPageState extends State<WeeklyPlannerPage> {
         }
 
         return Scaffold(
-          body: Container(
-            decoration: BoxDecoration(
+          body: Container(            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  themeOption.primary.withOpacity(0.05),
-                  themeOption.accent.withOpacity(0.03),
-                  themeOption.secondary.withOpacity(0.02),
-                  Colors.white,
-                ],
-                stops: const [0.0, 0.3, 0.7, 1.0],
+                colors: AppTheme.instance.isDark
+                  ? [
+                      const Color(0xFF1F2937).withOpacity(0.9),
+                      const Color(0xFF111827).withOpacity(0.95),
+                      const Color(0xFF0F172A),
+                    ]
+                  : [
+                      themeOption.primary.withOpacity(0.05),
+                      themeOption.accent.withOpacity(0.03),
+                      themeOption.secondary.withOpacity(0.02),
+                      Colors.white,
+                    ],
+                stops: AppTheme.instance.isDark 
+                  ? const [0.0, 0.5, 1.0]
+                  : const [0.0, 0.3, 0.7, 1.0],
               ),
-            ),
-            child: SafeArea(
+            ),child: SafeArea(
               child: NestedScrollView(
+                physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
                 headerSliverBuilder: (context, innerBoxIsScrolled) {
                   return [
                     SliverAppBar(
@@ -268,9 +273,9 @@ class _WeeklyPlannerPageState extends State<WeeklyPlannerPage> {
                         ),
                       ),
                     ),
-                  ];
-                },
+                  ];                },
                 body: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
                   child: Column(
                     children: [
                       // Premium Week Selector
@@ -390,9 +395,9 @@ class _WeeklyPlannerPageState extends State<WeeklyPlannerPage> {
     
     return Container(
       height: 120,
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      child: ListView.builder(
+      margin: const EdgeInsets.symmetric(horizontal: 20),      child: ListView.builder(
         scrollDirection: Axis.horizontal,
+        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
         itemCount: 7,
         itemBuilder: (context, index) {
           final day = _selectedDate.add(Duration(days: index));
@@ -643,11 +648,10 @@ class _WeeklyPlannerPageState extends State<WeeklyPlannerPage> {
                 ),
               ],
             ),
-          ),
-          // Task list
+          ),          // Task list
           ListView.builder(
             shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(), // Bu zaten scroll yapılmaması için ayarlanmış
             itemCount: tasksForSelectedDay.length,
             itemBuilder: (context, index) {
               final task = tasksForSelectedDay[index];

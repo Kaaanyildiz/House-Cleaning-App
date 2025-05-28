@@ -41,9 +41,9 @@ class _DailyMotivationPageState extends State<DailyMotivationPage> {
             tooltip: 'Yeni alıntı getir',
           ),
         ],
-      ),
-      body: Center(
+      ),      body: Center(
         child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

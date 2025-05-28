@@ -77,10 +77,10 @@ class _BadgesPageState extends State<BadgesPage> {
       ),
     );
   }
-
   Widget _buildBadgeList(List<String> unlockedBadgeIds) {
     return GridView.builder(
       padding: const EdgeInsets.all(16),
+      physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         childAspectRatio: 0.8,

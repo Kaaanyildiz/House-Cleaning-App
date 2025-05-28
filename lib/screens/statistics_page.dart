@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'dart:math' as math;
 import 'package:house_cleaning/constants/app_theme.dart';
 import 'package:house_cleaning/models/task_model.dart';
 import 'package:house_cleaning/services/user_provider.dart';
@@ -245,23 +244,28 @@ class _StatisticsPageState extends State<StatisticsPage> {
               ),
             ),
           );
-        }
-
-        return Scaffold(
+        }        return Scaffold(
           body: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  themeOption.primary.withOpacity(0.05),
-                  themeOption.accent.withOpacity(0.05),
-                  Colors.white,
-                ],
+                colors: AppTheme.instance.isDark
+                    ? [
+                        const Color(0xFF1F2937).withOpacity(0.9),
+                        const Color(0xFF111827).withOpacity(0.95),
+                        const Color(0xFF0F172A),
+                      ]
+                    : [
+                        themeOption.primary.withOpacity(0.05),
+                        themeOption.accent.withOpacity(0.05),
+                        Colors.white,
+                      ],
                 stops: const [0.0, 0.3, 1.0],
               ),
             ),
             child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
               slivers: [
                 SliverAppBar(
                   expandedHeight: 120,
@@ -849,13 +853,12 @@ class _StatisticsPageState extends State<StatisticsPage> {
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
+              children: [                Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E293B),
+                    color: AppTheme.instance.isDark ? Colors.white : const Color(0xFF1E293B),
                   ),
                 ),
                 const SizedBox(height: 4),

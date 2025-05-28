@@ -25,7 +25,14 @@ class NotificationService {
         DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
-      requestSoundPermission: true,
+      requestSoundPermission: true,    );    
+    
+    // Windows için bildirim ayarları
+    final WindowsInitializationSettings windowsInitializationSettings =
+        WindowsInitializationSettings(
+      appName: 'Temizlik Asistanı',
+      appUserModelId: 'HouseCleaning.App',
+      guid: '{00000000-0000-0000-0000-000000000000}',
     );
 
     // Tüm platformlar için başlatma ayarları
@@ -33,6 +40,7 @@ class NotificationService {
         InitializationSettings(
       android: androidInitializationSettings,
       iOS: iosInitializationSettings,
+      windows: windowsInitializationSettings,
     );
 
     // Bildirimleri başlat
@@ -59,12 +67,15 @@ class NotificationService {
       'Temel Bildirimler',
       channelDescription: 'Görev hatırlatmaları için kanal',
       importance: Importance.high,
-      priority: Priority.high,
-    );
+      priority: Priority.high,    );    
+    
+    // Windows bildirimleri için ayrıntılar
+    const WindowsNotificationDetails windowsNotificationDetails = WindowsNotificationDetails();
 
     const NotificationDetails notificationDetails = NotificationDetails(
       android: androidNotificationDetails,
       iOS: DarwinNotificationDetails(),
+      windows: windowsNotificationDetails,
     );
 
     await _flutterLocalNotificationsPlugin.show(
@@ -91,10 +102,14 @@ class NotificationService {
       priority: Priority.high,
     );
 
+    // Windows bildirimleri için ayrıntılar
+    const WindowsNotificationDetails windowsNotificationDetails = WindowsNotificationDetails();
+
     const NotificationDetails notificationDetails = NotificationDetails(
       android: androidNotificationDetails,
       iOS: DarwinNotificationDetails(),
-    );    await _flutterLocalNotificationsPlugin.zonedSchedule(
+      windows: windowsNotificationDetails,
+    );await _flutterLocalNotificationsPlugin.zonedSchedule(
       id,
       title,
       body,
@@ -118,11 +133,15 @@ class NotificationService {
       importance: Importance.high,
       priority: Priority.high,
     );
+    
+    // Windows bildirimleri için ayrıntılar
+    const WindowsNotificationDetails windowsNotificationDetails = WindowsNotificationDetails();
 
     const NotificationDetails notificationDetails = NotificationDetails(
       android: androidNotificationDetails,
       iOS: DarwinNotificationDetails(),
-    );    await _flutterLocalNotificationsPlugin.zonedSchedule(
+      windows: windowsNotificationDetails,
+    );await _flutterLocalNotificationsPlugin.zonedSchedule(
       id,
       title,
       body,

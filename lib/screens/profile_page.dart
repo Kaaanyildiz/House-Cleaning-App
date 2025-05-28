@@ -4,7 +4,6 @@ import 'dart:ui';
 import '../constants/app_theme.dart';
 import '../models/user_model.dart';
 import '../services/user_provider.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import '../widgets/premium_effects.dart';
 import 'badges_page.dart';
 import 'settings_page.dart';
@@ -19,48 +18,9 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePagePremiumState extends State<ProfilePage> with SingleTickerProviderStateMixin {
   final _nameController = TextEditingController();
   bool _isEditing = false;
-  
-  // Ayarlar için değişkenler
-  bool _isDarkMode = false;
-  bool _notificationsEnabled = true;
-  int _selectedColorIndex = 0;
-  bool _soundEffectsEnabled = true;
-  String _selectedLanguage = 'Türkçe';
-  
-  final List<String> _languages = ['Türkçe', 'English', 'Deutsch', 'Español'];
-  
-  final List<Color> _themeColors = [
-    AppTheme.primaryColor, // Varsayılan yeşil
-    Colors.purple,
-    Colors.blue,
-    Colors.orange,
-    Colors.teal,
-  ];
-
   @override
   void initState() {
     super.initState();
-    _loadSettings();
-  }
-
-  // Mevcut ayarları yükle
-  void _loadSettings() async {
-    // Tema ayarlarını yükle
-    _isDarkMode = AppTheme.instance.isDark;
-    
-    // Mevcut renk temasını bul
-    final currentTheme = AppTheme.instance.currentThemeOption;
-    _selectedColorIndex = AppTheme.themeOptions.indexWhere(
-      (option) => option.primary == currentTheme.primary
-    );
-    if (_selectedColorIndex < 0) _selectedColorIndex = 0;
-    
-    // Bildirim ayarlarını yükle
-    final settingsBox = await Hive.openBox('settings');
-    _notificationsEnabled = settingsBox.get('notificationsEnabled', defaultValue: true);
-    _soundEffectsEnabled = settingsBox.get('soundEffectsEnabled', defaultValue: true);
-    
-    setState(() {});
   }
 
   @override
@@ -75,9 +35,27 @@ class _ProfilePagePremiumState extends State<ProfilePage> with SingleTickerProvi
       builder: (context, userProvider, child) {
         final user = userProvider.currentUser;
         _nameController.text = user.name;
-        
-        return Scaffold(
-          body: CustomScrollView(
+          return Scaffold(
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: AppTheme.instance.isDark 
+                  ? [
+                      const Color(0xFF1a1a1a),
+                      const Color(0xFF2d2d2d),
+                      const Color(0xFF1a1a1a),
+                    ]
+                  : [
+                      Colors.grey[50]!,
+                      Colors.white,
+                      Colors.grey[100]!,
+                    ],
+                stops: const [0.0, 0.3, 1.0],
+              ),
+            ),
+            child: CustomScrollView(
             slivers: [
               SliverAppBar(
                 expandedHeight: 200.0,
@@ -141,13 +119,13 @@ class _ProfilePagePremiumState extends State<ProfilePage> with SingleTickerProvi
                       _buildActionButtons(context),
                       const SizedBox(height: 24),
                       _buildStatisticsSection(userProvider),
-                      const SizedBox(height: 24),
-                      _buildPremiumSection(userProvider),
+                      const SizedBox(height: 24),                      _buildPremiumSection(userProvider),
                     ],
                   ),
                 ),
               ),
             ],
+            ),
           ),
           floatingActionButton: FloatingActionButtonWithAnimation(
             onPressed: () {
@@ -408,19 +386,18 @@ class _ProfilePagePremiumState extends State<ProfilePage> with SingleTickerProvi
               color: AppTheme.primaryColor,
               size: 24,
             ),
-            const SizedBox(height: 8),
-            Text(
+            const SizedBox(height: 8),            Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
+                color: AppTheme.instance.isDark ? Colors.white : Colors.black87,
               ),
-            ),
-            Text(
+            ),Text(
               label,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[600],
+                color: AppTheme.instance.isDark ? Colors.grey[300] : Colors.grey[600],
               ),
             ),
           ],
@@ -538,22 +515,21 @@ class _ProfilePagePremiumState extends State<ProfilePage> with SingleTickerProvi
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
+              children: [                Text(
                   title,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey[500],
+                    color: AppTheme.instance.isDark ? Colors.grey[300] : Colors.grey[500],
                   ),
                 ),
                 const SizedBox(height: 4),
                 Row(
-                  children: [
-                    Text(
+                  children: [                    Text(
                       value,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        color: AppTheme.instance.isDark ? Colors.white : Colors.black87,
                       ),
                     ),
                     
@@ -655,22 +631,22 @@ class _ProfilePagePremiumState extends State<ProfilePage> with SingleTickerProvi
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
+                      children: [                        Text(
                           isPremium ? 'Premium Üye' : 'Standart Üye',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: isPremium ? Colors.amber : null,
+                            color: isPremium 
+                              ? Colors.amber 
+                              : (AppTheme.instance.isDark ? Colors.white : Colors.black87),
                           ),
-                        ),
-                        Text(
+                        ),Text(
                           isPremium
                               ? 'Tüm özelliklere erişebilirsiniz'
                               : 'Özel özelliklere erişmek için yükseltin',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey[600],
+                            color: AppTheme.instance.isDark ? Colors.grey[300] : Colors.grey[600],
                           ),
                         ),
                       ],

@@ -26,12 +26,20 @@ class _HomePageState extends State<HomePage> {
     const StatisticsPage(), // Rozetler yerine İstatistikler
     const ProfilePage(),
   ];
-
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }  @override
+    // Eğer yeni bir seçim yapıldıysa ve mevcut seçimden farklıysa
+    if (_selectedIndex != index) {
+      setState(() {
+        _selectedIndex = index;
+      });
+      
+      // Sayfalar arası geçişlerde gezinme yığınını temizle
+      // bu şekilde geri tuşuna basıldığında uygulama içinde dolaşmak yerine direkt çıkış yapılabilir
+      if (Navigator.canPop(context)) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      }
+    }
+  }@override
   Widget build(BuildContext context) {
     final themeOption = AppTheme.instance.currentThemeOption;
     
@@ -54,7 +62,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
-        child: ClipRRect(
+        child:          ClipRRect(
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(30),
             topRight: Radius.circular(30),
@@ -64,43 +72,60 @@ class _HomePageState extends State<HomePage> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white.withOpacity(0.95),
-                  Colors.white.withOpacity(0.9),
-                ],
+                colors: AppTheme.instance.isDark
+                    ? [
+                        const Color(0xFF374151).withOpacity(0.95),
+                        const Color(0xFF1F2937).withOpacity(0.9),
+                      ]
+                    : [
+                        Colors.white.withOpacity(0.95),
+                        Colors.white.withOpacity(0.9),
+                      ],
               ),
               border: Border(
                 top: BorderSide(
-                  color: Colors.white.withOpacity(0.2),
+                  color: AppTheme.instance.isDark 
+                      ? Colors.white.withOpacity(0.1) 
+                      : Colors.white.withOpacity(0.2),
                   width: 1,
                 ),
               ),
-            ),
-            child: BottomNavigationBar(
+            ),child: BottomNavigationBar(
               type: BottomNavigationBarType.fixed,
               currentIndex: _selectedIndex,
               selectedItemColor: themeOption.primary,
-              unselectedItemColor: Colors.grey[400],
+              unselectedItemColor: AppTheme.instance.isDark ? Colors.grey[300] : Colors.grey[400],
               backgroundColor: Colors.transparent,
               elevation: 0,
-              selectedLabelStyle: const TextStyle(
+              landscapeLayout: BottomNavigationBarLandscapeLayout.centered,selectedLabelStyle: const TextStyle(
                 fontWeight: FontWeight.w700,
-                fontSize: 11,
+                fontSize: 12,
               ),
               unselectedLabelStyle: const TextStyle(
                 fontWeight: FontWeight.w500,
                 fontSize: 10,
               ),
+              selectedFontSize: 12,
+              unselectedFontSize: 10,
+              iconSize: 22,
+              showUnselectedLabels: true,
+              showSelectedLabels: true,
+              enableFeedback: true,
               onTap: _onItemTapped,
-              items: [
-                BottomNavigationBarItem(
+              items: [                BottomNavigationBarItem(
                   icon: AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
-                    padding: EdgeInsets.all(_selectedIndex == 0 ? 8 : 4),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: _selectedIndex == 0 ? 14 : 4,
+                      vertical: _selectedIndex == 0 ? 10 : 4,
+                    ),
+                    width: _selectedIndex == 0 ? 54 : 40,
+                    height: _selectedIndex == 0 ? 46 : 40,
+                    alignment: Alignment.center,
                     decoration: _selectedIndex == 0 
                         ? BoxDecoration(
-                            color: themeOption.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
+                            color: themeOption.primary.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(14),
                           )
                         : null,
                     child: Icon(
@@ -109,15 +134,20 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   label: 'Ana Sayfa',
-                ),
-                BottomNavigationBarItem(
+                ),                BottomNavigationBarItem(
                   icon: AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
-                    padding: EdgeInsets.all(_selectedIndex == 1 ? 8 : 4),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: _selectedIndex == 1 ? 14 : 4,
+                      vertical: _selectedIndex == 1 ? 10 : 4,
+                    ),
+                    width: _selectedIndex == 1 ? 54 : 40,
+                    height: _selectedIndex == 1 ? 46 : 40,
+                    alignment: Alignment.center,
                     decoration: _selectedIndex == 1 
                         ? BoxDecoration(
-                            color: themeOption.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
+                            color: themeOption.primary.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(14),
                           )
                         : null,
                     child: Icon(
@@ -126,15 +156,20 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   label: 'Görevler',
-                ),
-                BottomNavigationBarItem(
+                ),                BottomNavigationBarItem(
                   icon: AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
-                    padding: EdgeInsets.all(_selectedIndex == 2 ? 8 : 4),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: _selectedIndex == 2 ? 14 : 4,
+                      vertical: _selectedIndex == 2 ? 10 : 4,
+                    ),
+                    width: _selectedIndex == 2 ? 54 : 40,
+                    height: _selectedIndex == 2 ? 46 : 40,
+                    alignment: Alignment.center,
                     decoration: _selectedIndex == 2 
                         ? BoxDecoration(
-                            color: themeOption.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
+                            color: themeOption.primary.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(14),
                           )
                         : null,
                     child: Icon(
@@ -143,15 +178,20 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   label: 'Planlayıcı',
-                ),
-                BottomNavigationBarItem(
+                ),                BottomNavigationBarItem(
                   icon: AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
-                    padding: EdgeInsets.all(_selectedIndex == 3 ? 8 : 4),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: _selectedIndex == 3 ? 14 : 4,
+                      vertical: _selectedIndex == 3 ? 10 : 4,
+                    ),
+                    width: _selectedIndex == 3 ? 54 : 40,
+                    height: _selectedIndex == 3 ? 46 : 40,
+                    alignment: Alignment.center,
                     decoration: _selectedIndex == 3 
                         ? BoxDecoration(
-                            color: themeOption.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
+                            color: themeOption.primary.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(14),
                           )
                         : null,
                     child: Icon(
@@ -160,15 +200,20 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   label: 'İstatistikler',
-                ),
-                BottomNavigationBarItem(
+                ),                BottomNavigationBarItem(
                   icon: AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
-                    padding: EdgeInsets.all(_selectedIndex == 4 ? 8 : 4),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: _selectedIndex == 4 ? 14 : 4,
+                      vertical: _selectedIndex == 4 ? 10 : 4,
+                    ),
+                    width: _selectedIndex == 4 ? 54 : 40,
+                    height: _selectedIndex == 4 ? 46 : 40,
+                    alignment: Alignment.center,
                     decoration: _selectedIndex == 4 
                         ? BoxDecoration(
-                            color: themeOption.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
+                            color: themeOption.primary.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(14),
                           )
                         : null,
                     child: Icon(
@@ -196,22 +241,26 @@ class DashboardPage extends StatelessWidget {
     final themeOption = AppTheme.instance.currentThemeOption;
     
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
+      body: Container(        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              themeOption.surface,
-              Colors.white,
-              Colors.white,
-            ],
+            colors: AppTheme.instance.isDark
+                ? [
+                    const Color(0xFF1F2937),
+                    const Color(0xFF111827),
+                    const Color(0xFF0F172A),
+                  ]
+                : [
+                    themeOption.surface,
+                    Colors.white,
+                    Colors.white,
+                  ],
             stops: const [0.0, 0.3, 1.0],
           ),
-        ),
-        child: SafeArea(
+        ),child: SafeArea(
           child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
+            physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
             slivers: [
               // Premium App Bar
               SliverAppBar(
@@ -455,12 +504,12 @@ class DashboardPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           ShimmerEffect(
-            child: Text(
+            child:            Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w900,
-                color: Color(0xFF1E293B),
+                color: AppTheme.instance.isDark ? Colors.white : const Color(0xFF1E293B),
               ),
             ),
           ),
@@ -473,12 +522,11 @@ class DashboardPage extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
+          const SizedBox(height: 2),          Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: Color(0xFF475569),
+              color: AppTheme.instance.isDark ? Colors.grey[300] : const Color(0xFF475569),
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -507,13 +555,12 @@ class DashboardPage extends StatelessWidget {
                 size: 20,
               ),
             ),
-            const SizedBox(width: 12),
-            const Text(
+            const SizedBox(width: 12),            Text(
               'Günün Motivasyonu',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF1E293B),
+                color: AppTheme.instance.isDark ? Colors.white : const Color(0xFF1E293B),
               ),
             ),
           ],
@@ -555,13 +602,12 @@ class DashboardPage extends StatelessWidget {
                 size: 20,
               ),
             ),
-            const SizedBox(width: 12),
-            const Text(
+            const SizedBox(width: 12),            Text(
               'Hızlı Aksiyonlar',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF1E293B),
+                color: AppTheme.instance.isDark ? Colors.white : const Color(0xFF1E293B),
               ),
             ),
           ],
@@ -642,11 +688,10 @@ class DashboardPage extends StatelessWidget {
               ),
               child: Icon(icon, color: Colors.white, size: 24),
             ),
-            const SizedBox(height: 12),
-            Text(
+            const SizedBox(height: 12),            Text(
               title,
-              style: const TextStyle(
-                color: Color(0xFF1E293B),
+              style: TextStyle(
+                color: AppTheme.instance.isDark ? Colors.white : const Color(0xFF1E293B),
                 fontWeight: FontWeight.w700,
                 fontSize: 14,
               ),

@@ -20,26 +20,42 @@ class GlassmorphismContainer extends StatelessWidget {
     this.height,
     this.width,
   }) : super(key: key);
-
+  
+  // Karanlık modu kontrol eden yardımcı metod
+  bool _isDarkMode(BuildContext context) {
+    // Temadan kontrol etmek daha güvenli
+    return Theme.of(context).brightness == Brightness.dark;
+  }
+  
   @override
   Widget build(BuildContext context) {
+    final isDark = _isDarkMode(context);
+    
     return Container(
       height: height,
       width: width,
       padding: padding,
       decoration: BoxDecoration(
-        color: color ?? Colors.white.withOpacity(0.1),
+        // Karanlık modda daha koyu bir camlaşma efekti ve kontrast
+        color: color ?? (isDark 
+            ? Colors.grey[900]!.withOpacity(0.5)  
+            : Colors.white.withOpacity(0.7)),
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: Colors.white.withOpacity(0.2),
+          // Karanlık modda daha belirgin bir kenar rengi
+          color: isDark 
+              ? Colors.white.withOpacity(0.1) 
+              : Colors.white.withOpacity(0.2),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-            spreadRadius: -4,
+            color: isDark 
+                ? Colors.black.withOpacity(0.3) 
+                : Colors.black.withOpacity(0.1),
+            blurRadius: isDark ? 10 : 20,
+            offset: const Offset(0, 5),
+            spreadRadius: isDark ? -2 : -4,
           ),
         ],
       ),
@@ -77,6 +93,12 @@ class _NeumorphismContainerState extends State<NeumorphismContainer>
   bool _isPressed = false;
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
+  
+  // Karanlık modu kontrol eden yardımcı metod
+  bool _isDarkMode(BuildContext context) {
+    final brightness = MediaQuery.of(context).platformBrightness;
+    return brightness == Brightness.dark;
+  }
 
   @override
   void initState() {
@@ -133,24 +155,42 @@ class _NeumorphismContainerState extends State<NeumorphismContainer>
               duration: const Duration(milliseconds: 200),
               height: widget.height,
               width: widget.width,
-              padding: widget.padding,
-              decoration: BoxDecoration(
-                color: widget.backgroundColor ?? const Color(0xFFE2E8F0),
+              padding: widget.padding,              decoration: BoxDecoration(
+                // Karanlık modda daha uyumlu bir arkaplan rengi
+                color: widget.backgroundColor ?? (_isDarkMode(context) 
+                  ? const Color(0xFF2D3748) // Karanlık mod için koyu gri
+                  : const Color(0xFFE2E8F0)), // Açık mod için açık gri
                 borderRadius: BorderRadius.circular(widget.borderRadius),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.white,
-                    offset: Offset(_isPressed ? 2 : -6, _isPressed ? 2 : -6),
-                    blurRadius: _isPressed ? 4 : 12,
-                    spreadRadius: _isPressed ? -2 : 0,
-                  ),
-                  BoxShadow(
-                    color: const Color(0xFFBECBE8).withOpacity(0.4),
-                    offset: Offset(_isPressed ? -2 : 6, _isPressed ? -2 : 6),
-                    blurRadius: _isPressed ? 4 : 12,
-                    spreadRadius: _isPressed ? -2 : 0,
-                  ),
-                ],
+                boxShadow: _isDarkMode(context)
+                  ? [
+                      // Karanlık mod için daha az belirgin gölgeler
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.6),
+                        offset: Offset(_isPressed ? 2 : -3, _isPressed ? 2 : -3),
+                        blurRadius: _isPressed ? 3 : 6,
+                        spreadRadius: _isPressed ? -1 : -1,
+                      ),
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.05),
+                        offset: Offset(_isPressed ? -2 : 3, _isPressed ? -2 : 3),
+                        blurRadius: _isPressed ? 3 : 6,
+                        spreadRadius: _isPressed ? -1 : -2,
+                      ),
+                    ]
+                  : [
+                      // Açık mod için normal gölgeler
+                      BoxShadow(
+                        color: Colors.white,
+                        offset: Offset(_isPressed ? 2 : -6, _isPressed ? 2 : -6),
+                        blurRadius: _isPressed ? 4 : 12,
+                        spreadRadius: _isPressed ? -2 : 0,
+                      ),
+                      BoxShadow(
+                        color: const Color(0xFFBECBE8).withOpacity(0.4),
+                        offset: Offset(_isPressed ? -2 : 6, _isPressed ? -2 : 6),                        blurRadius: _isPressed ? 4 : 12,
+                        spreadRadius: _isPressed ? -2 : 0,
+                      ),
+                    ],
               ),
               child: widget.child,
             ),
@@ -209,6 +249,9 @@ class _AnimatedGradientContainerState extends State<AnimatedGradientContainer>
 
   @override
   Widget build(BuildContext context) {
+    // Karanlık mod kontrolü
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
@@ -219,7 +262,9 @@ class _AnimatedGradientContainerState extends State<AnimatedGradientContainer>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: widget.colors,
+              colors: widget.colors.map((color) => 
+                isDark ? color.withOpacity(color.opacity * 0.7) : color
+              ).toList(),
               transform: GradientRotation(_animation.value * 2 * math.pi),
             ),
           ),
@@ -232,15 +277,15 @@ class _AnimatedGradientContainerState extends State<AnimatedGradientContainer>
 
 class ShimmerEffect extends StatefulWidget {
   final Widget child;
-  final Color baseColor;
-  final Color highlightColor;
+  final Color? baseColor;
+  final Color? highlightColor;
   final Duration period;
 
   const ShimmerEffect({
     Key? key,
     required this.child,
-    this.baseColor = const Color(0xFFE0E0E0),
-    this.highlightColor = const Color(0xFFF5F5F5),
+    this.baseColor,
+    this.highlightColor,
     this.period = const Duration(milliseconds: 1500),
   }) : super(key: key);
 
@@ -270,6 +315,15 @@ class _ShimmerEffectState extends State<ShimmerEffect>
 
   @override
   Widget build(BuildContext context) {
+    // Karanlık mod kontrolü
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Karanlık modda farklı renkler kullan
+    final baseCol = widget.baseColor ?? 
+        (isDark ? const Color(0xFF303030) : const Color(0xFFE0E0E0));
+    final highlightCol = widget.highlightColor ?? 
+        (isDark ? const Color(0xFF505050) : const Color(0xFFF5F5F5));
+    
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -280,9 +334,9 @@ class _ShimmerEffectState extends State<ShimmerEffect>
               begin: Alignment(-1.0, -0.3),
               end: Alignment(1.0, 0.3),
               colors: [
-                widget.baseColor,
-                widget.highlightColor,
-                widget.baseColor,
+                baseCol,
+                highlightCol,
+                baseCol,
               ],
               stops: [
                 0.0,

@@ -5,7 +5,6 @@ import 'package:house_cleaning/models/task_model.dart';
 import 'package:house_cleaning/services/user_provider.dart';
 import 'package:house_cleaning/services/notification_service.dart';
 import 'package:house_cleaning/widgets/premium_effects.dart';
-import 'dart:math' as math;
 
 class TasksPage extends StatefulWidget {
   const TasksPage({Key? key}) : super(key: key);
@@ -98,35 +97,41 @@ class _TasksPageState extends State<TasksPage> with SingleTickerProviderStateMix
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  themeOption.primary.withOpacity(0.05),
-                  themeOption.accent.withOpacity(0.03),
-                  themeOption.secondary.withOpacity(0.02),
-                  Colors.white,
-                ],
-                stops: const [0.0, 0.3, 0.7, 1.0],
+                colors: AppTheme.instance.isDark
+                  ? [
+                      const Color(0xFF1F2937).withOpacity(0.9),
+                      const Color(0xFF111827).withOpacity(0.95),
+                    ]
+                  : [
+                      themeOption.primary.withOpacity(0.05),
+                      themeOption.accent.withOpacity(0.03),
+                      themeOption.secondary.withOpacity(0.02),
+                      Colors.white,
+                    ],
+                stops: AppTheme.instance.isDark 
+                  ? [0.0, 1.0]
+                  : const [0.0, 0.3, 0.7, 1.0],
               ),
-            ),
-            child: SafeArea(
+            ),            child: SafeArea(
               child: NestedScrollView(
+                physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
                 headerSliverBuilder: (context, innerBoxIsScrolled) {
-                  return [
-                    SliverAppBar(
+                  return [                    SliverAppBar(
                       expandedHeight: 200,
                       floating: false,
                       pinned: true,
                       elevation: 0,
-                      backgroundColor: Colors.transparent,
+                      backgroundColor: Colors.transparent, 
+                      collapsedHeight: 85, // Arttırılmış minimum yükseklik - tab bar ile çakışmaması için
                       leading: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: NeumorphismContainer(
                           width: 40,
                           height: 40,
-                          onTap: () => Navigator.pop(context),
-                          child: const Icon(
+                          onTap: () => Navigator.pop(context),                          child: Icon(
                             Icons.arrow_back_ios_rounded,
                             size: 18,
-                            color: Color(0xFF1E293B),
+                            color: AppTheme.instance.isDark ? Colors.white : const Color(0xFF1E293B),
                           ),
                         ),
                       ),
@@ -146,27 +151,30 @@ class _TasksPageState extends State<TasksPage> with SingleTickerProviderStateMix
                             ),
                           ),
                         ),
-                      ],
-                      flexibleSpace: FlexibleSpaceBar(
-                        title: AnimatedGradientContainer(
-                          colors: [
-                            themeOption.primary,
-                            themeOption.accent,
-                            themeOption.secondary,
-                          ],
-                          duration: const Duration(seconds: 4),
-                          borderRadius: BorderRadius.circular(12),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          child: const Text(
-                            'Görevlerim 📝',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 16,
-                              letterSpacing: 0.5,
+                      ],                      flexibleSpace: FlexibleSpaceBar(
+                        title: Container(
+                          margin: const EdgeInsets.only(bottom: 26), // Tab bar ile çakışmasın diye boşluk arttırıldı
+                          child: AnimatedGradientContainer(
+                            colors: [
+                              themeOption.primary,
+                              themeOption.accent,
+                              themeOption.secondary,
+                            ],
+                            duration: const Duration(seconds: 4),
+                            borderRadius: BorderRadius.circular(12),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            child: const Text(
+                              'Görevlerim 📝',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 16,
+                                letterSpacing: 0.5,
+                              ),
                             ),
                           ),
                         ),
+                        titlePadding: const EdgeInsets.only(left: 16, bottom: 50), // Tab bar için daha fazla boşluk bırakıldı
                         centerTitle: false,
                         background: Stack(
                           children: [
@@ -245,37 +253,59 @@ class _TasksPageState extends State<TasksPage> with SingleTickerProviderStateMix
                             ),
                           ],
                         ),
-                      ),
-                      bottom: PreferredSize(
-                        preferredSize: const Size.fromHeight(60),
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      ),                      bottom: PreferredSize(
+                        preferredSize: const Size.fromHeight(60),                        child: Container(                          
+                          margin: const EdgeInsets.only(bottom: 10, left: 12, right: 12),
+                          height: 48, // Sabit yükseklik eklendi
                           child: GlassmorphismContainer(
                             borderRadius: 25,
-                            padding: const EdgeInsets.all(4),
+                            padding: const EdgeInsets.all(2),
                             child: TabBar(
                               controller: _tabController,
+                              isScrollable: false, // Kaydırma devre dışı bırakılıp yayılacak
+                              labelPadding: EdgeInsets.zero, // Tab'ların tüm alanı kullanması için sıfırlandı
                               indicator: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [themeOption.primary, themeOption.accent],
                                 ),
                                 borderRadius: BorderRadius.circular(20),
                               ),
+                              indicatorSize: TabBarIndicatorSize.tab, // Tam tab genişliğini kapsayacak
+                              indicatorPadding: EdgeInsets.zero, // İndikatörün kenar boşlukları kaldırıldı
                               labelColor: Colors.white,
                               unselectedLabelColor: const Color(0xFF64748B),
                               labelStyle: const TextStyle(
                                 fontWeight: FontWeight.w700,
-                                fontSize: 12,
+                                fontSize: 14, // Font boyutu arttırıldı
                               ),
                               unselectedLabelStyle: const TextStyle(
                                 fontWeight: FontWeight.w500,
-                                fontSize: 11,
-                              ),
-                              tabs: const [
-                                Tab(text: 'Tümü'),
-                                Tab(text: 'Mutfak'),
-                                Tab(text: 'Banyo'),
-                                Tab(text: 'Genel'),
+                                fontSize: 13, // Font boyutu arttırıldı
+                              ),                              tabs: const [
+                                Tab(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 8), 
+                                    child: Text('Tümü', maxLines: 1),
+                                  ),
+                                ),
+                                Tab(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 8), 
+                                    child: Text('Mutfak', maxLines: 1),
+                                  ),
+                                ),
+                                Tab(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 8), 
+                                    child: Text('Banyo', maxLines: 1),
+                                  ),
+                                ),
+                                Tab(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 8), 
+                                    child: Text('Genel', maxLines: 1),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -310,6 +340,7 @@ class _TasksPageState extends State<TasksPage> with SingleTickerProviderStateMix
 
   Widget _buildPremiumTaskList(List<Task> tasks) {
     final themeOption = AppTheme.instance.currentThemeOption;
+    final isDarkMode = AppTheme.instance.isDark;
     
     if (tasks.isEmpty) {
       return Container(
@@ -319,29 +350,34 @@ class _TasksPageState extends State<TasksPage> with SingleTickerProviderStateMix
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ShimmerEffect(
+                baseColor: isDarkMode ? const Color(0xFF303030) : const Color(0xFFE0E0E0),
+                highlightColor: isDarkMode ? const Color(0xFF505050) : const Color(0xFFF5F5F5),
                 child: Container(
                   width: 120,
                   height: 120,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [themeOption.primary.withOpacity(0.1), themeOption.accent.withOpacity(0.1)],
+                      colors: isDarkMode
+                          ? [themeOption.primary.withOpacity(0.3), themeOption.accent.withOpacity(0.2)]
+                          : [themeOption.primary.withOpacity(0.1), themeOption.accent.withOpacity(0.1)],
                     ),
                     borderRadius: BorderRadius.circular(60),
                   ),
                   child: Icon(
                     Icons.task_alt_rounded,
                     size: 60,
-                    color: themeOption.primary.withOpacity(0.5),
+                    color: isDarkMode
+                        ? themeOption.primary.withOpacity(0.4)
+                        : themeOption.primary.withOpacity(0.5),
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-              Text(
+              const SizedBox(height: 24),              Text(
                 'Bu kategoride görev yok',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E293B),
+                  color: AppTheme.instance.isDark ? Colors.white : const Color(0xFF1E293B),
                 ),
               ),
               const SizedBox(height: 8),
@@ -349,7 +385,7 @@ class _TasksPageState extends State<TasksPage> with SingleTickerProviderStateMix
                 'Yeni görev eklemek için + butonuna tıklayın',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey[600],
+                  color: AppTheme.instance.isDark ? Colors.grey[300] : Colors.grey[600],
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,
@@ -358,10 +394,9 @@ class _TasksPageState extends State<TasksPage> with SingleTickerProviderStateMix
           ),
         ),
       );
-    }
-
-    return ListView.builder(
+    }    return ListView.builder(
       padding: const EdgeInsets.all(20),
+      physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
       itemCount: tasks.length,
       itemBuilder: (context, index) {
         final task = tasks[index];
@@ -403,14 +438,16 @@ class _TasksPageState extends State<TasksPage> with SingleTickerProviderStateMix
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
+                        children: [                          Text(
                             task.title,
                             style: TextStyle(
                               decoration: task.isCompleted ? TextDecoration.lineThrough : null,
                               fontWeight: FontWeight.w700,
                               fontSize: 18,
-                              color: task.isCompleted ? Colors.grey[500] : const Color(0xFF1E293B),
+                              // Karanlık modda metin rengi beyaz veya gri, tamamlanmışsa daha soluk
+                              color: task.isCompleted 
+                                ? Colors.grey[500] 
+                                : AppTheme.instance.isDark ? Colors.white : const Color(0xFF1E293B),
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -452,14 +489,15 @@ class _TasksPageState extends State<TasksPage> with SingleTickerProviderStateMix
                                 children: [
                                   Icon(
                                     Icons.access_time_rounded,
-                                    size: 14,
-                                    color: Colors.grey[600],
+                                    size: 14,                                    // Karanlık modda ikon rengi daha açık
+                                    color: AppTheme.instance.isDark ? Colors.grey[300] : Colors.grey[600],
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${task.estimatedMinutes} dk',
                                     style: TextStyle(
-                                      color: Colors.grey[600],
+                                      // Karanlık modda metin rengi daha açık
+                                      color: AppTheme.instance.isDark ? Colors.grey[300] : Colors.grey[600],
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -480,16 +518,19 @@ class _TasksPageState extends State<TasksPage> with SingleTickerProviderStateMix
                           _completeTask(task);
                         }
                       },
-                      child: Container(
-                        decoration: BoxDecoration(
+                      child: Container(                        decoration: BoxDecoration(
                           gradient: task.isCompleted 
                               ? const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF34D399)])
-                              : LinearGradient(colors: [Colors.grey[300]!, Colors.grey[400]!]),
+                              : AppTheme.instance.isDark
+                                  ? LinearGradient(colors: [Colors.grey[700]!, Colors.grey[800]!])
+                                  : LinearGradient(colors: [Colors.grey[300]!, Colors.grey[400]!]),
                           borderRadius: BorderRadius.circular(25),
                         ),
                         child: Icon(
                           task.isCompleted ? Icons.check_rounded : Icons.radio_button_unchecked_rounded,
-                          color: task.isCompleted ? Colors.white : Colors.grey[600],
+                          color: task.isCompleted 
+                              ? Colors.white 
+                              : AppTheme.instance.isDark ? Colors.white : Colors.grey[600],
                           size: 24,
                         ),
                       ),
@@ -503,14 +544,18 @@ class _TasksPageState extends State<TasksPage> with SingleTickerProviderStateMix
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [
-                        themeOption.surface.withOpacity(0.3),
-                        themeOption.surface.withOpacity(0.1),
-                      ],
+                      colors: AppTheme.instance.isDark 
+                      ? [
+                          Colors.grey[800]!.withOpacity(0.6),
+                          Colors.grey[900]!.withOpacity(0.3),
+                        ]
+                      : [
+                          themeOption.surface.withOpacity(0.3),
+                          themeOption.surface.withOpacity(0.1),
+                        ],
                     ),
                     borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
+                  ),child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -518,7 +563,10 @@ class _TasksPageState extends State<TasksPage> with SingleTickerProviderStateMix
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: themeOption.primary,
+                          // Başlık rengini tema rengiyle eşleştir, ama karanlık modda daha parlak
+                          color: AppTheme.instance.isDark 
+                              ? themeOption.primary.withOpacity(0.9)
+                              : themeOption.primary,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -526,7 +574,8 @@ class _TasksPageState extends State<TasksPage> with SingleTickerProviderStateMix
                         task.description,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey[700],
+                          // Karanlık modda açık gri renk, açık modda koyu gri
+                          color: AppTheme.instance.isDark ? Colors.grey[300] : Colors.grey[700],
                           fontWeight: FontWeight.w500,
                           height: 1.4,
                         ),
@@ -636,9 +685,9 @@ class _TasksPageState extends State<TasksPage> with SingleTickerProviderStateMix
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Yeni Görev Ekle'),
+        builder: (context, setDialogState) => AlertDialog(          title: const Text('Yeni Görev Ekle'),
           content: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

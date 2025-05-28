@@ -392,7 +392,6 @@ class UserProvider extends ChangeNotifier {
       debugPrint('Ayarları yükleme hatası: $e');
     }
   }
-
   // Kullanıcı ayarlarını kaydet - null güvenli
   Future<void> saveSettings(Map<String, dynamic> settings) async {
     try {
@@ -401,7 +400,7 @@ class UserProvider extends ChangeNotifier {
         await _settingsBox!.putAll(settings);
       }
       
-      // Tema ayarlarını uygula
+      // Tema ayarlarını uygula - doğrudan AppTheme üzerinde değişiklik yap
       if (settings.containsKey('isDarkMode')) {
         AppTheme.instance.setDarkMode(settings['isDarkMode']);
       }
