@@ -27,10 +27,6 @@ Ev Temizlik Asistanı, günlük ev temizlik görevlerinizi oyunlaştırarak daha
 - **Düşük Kaynak Kullanımı**: Optimize edilmiş performans
 - **Cross-Platform**: Android ve iOS desteği
 
-## 📱 Ekran Görüntüleri
-
-[Ekran görüntüleri buraya gelecek]
-
 ## 🚀 Başlangıç
 
 ### Gereksinimler
